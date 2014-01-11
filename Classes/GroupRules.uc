@@ -1,20 +1,16 @@
 /*==============================================================================
    TrialGroup
-   Copyright (C) 2010 Eliot Van Uytfanghe
+   Copyright (C) 2010 - 2014 Eliot Van Uytfanghe
 
    This program is free software; you can redistribute and/or modify
    it under the terms of the Open Unreal Mod License version 1.1.
 ==============================================================================*/
-class GroupRules extends GameRules
-	notplaceable
-	hidedropdown
-	cacheexempt;
+class GroupRules extends GameRules;
 
-var editconst noexport GroupManager Manager;
+var GroupManager Manager;
 
 function bool PreventDeath( Pawn Killed, Controller Killer, class<DamageType> damageType, vector HitLocation )
 {
-	local Pawn Clone;
 	local array<PlayerController> Members;
 	local int i;
 

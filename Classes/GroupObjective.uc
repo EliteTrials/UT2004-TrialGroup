@@ -1,6 +1,6 @@
 /*==============================================================================
    TrialGroup
-   Copyright (C) 2010 Eliot Van Uytfanghe
+   Copyright (C) 2010 - 2014 Eliot Van Uytfanghe
 
    This program is free software; you can redistribute and/or modify
    it under the terms of the Open Unreal Mod License version 1.1.
@@ -20,8 +20,7 @@ static final operator(102) string $( Color B, coerce string A )
 
 function Trigger( Actor Other, Pawn Instigator )
 {
-	local int m, numnonoptionaltasks, completedtasks, ct, t, groupindex;
-	local bool biscompletegroup;
+	local int m, groupindex;
 
 	if( bDisabled || Instigator == None || Instigator.Controller == None || !UnrealMPGameInfo(Level.Game).CanDisableObjective( Self ) )
 	{
@@ -36,7 +35,7 @@ function Trigger( Actor Other, Pawn Instigator )
 
     	if( Manager.Groups[groupindex].Members.Length != Manager.MaxGroupSize )
     	{
-    		xPawn(Instigator).ClientMessage( Class'GroupManager'.Default.GroupColor $ "The group you are in is not complete!, you need a group of size" @ Manager.MaxGroupSize );
+    		xPawn(Instigator).ClientMessage( Class'GroupManager'.Default.GroupColor $ "The group you are in is not at its capacity!, you need a group of size" @ Manager.MaxGroupSize );
     		return;
     	}
 
@@ -62,7 +61,7 @@ function Trigger( Actor Other, Pawn Instigator )
 	}
 	else
 	{
-		xPawn(Instigator).ClientMessage( Class'GroupManager'.Default.GroupColor $ "Sorry cannot complete the objective because your not in a group!" );
+		xPawn(Instigator).ClientMessage( Class'GroupManager'.Default.GroupColor $ "Sorry you cannot complete the objective, because you're not in a group!" );
 	}
 }
 
@@ -73,5 +72,5 @@ defaultproperties
 	ObjectiveDescription="Trigger Objective with a group to disable it."
 	ObjectiveName="Group Objective"
 
-	Info="You must name your map AS-Group-* in order for this to function with BTimes aswell keep in mind that this objective must be the final objective"
+	Info="You must name your map AS-Group-* in order for this to function with BTimes. Warning: This objective has to be the final objective."
 }
