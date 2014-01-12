@@ -50,7 +50,7 @@ defaultproperties
 
 	PosX=0.5
 	PosY=0.15
-	LifeTime=2
+	LifeTime=3
 	FontSize=-2
 
 	StackMode=SM_Down

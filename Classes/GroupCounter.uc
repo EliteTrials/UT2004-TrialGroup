@@ -13,6 +13,7 @@ var protected int GroupIndex;
 var protected int _TicksCount;
 var private int _TickIndex;
 
+var localized string PrepareMessage;
 var() localized string CountMessage;
 var() localized string GoMessage;
 
@@ -46,19 +47,21 @@ state CountDown
 	function BeginState();
 
 Begin:
-	Sleep( 0.25f );
+	//Manager.GroupSendMessage( GroupIndex, PrepareMessage, Manager.CounterMessageClass );
+	Sleep( 0.5f );
 	for( _TickIndex = 0; _TickIndex < _TicksCount; ++ _TickIndex )
 	{
-		Manager.GroupSendMessage( GroupIndex, Repl(CountMessage, "%i", _TicksCount - _TickIndex) );
-		Sleep( 1.f );
+		Manager.GroupSendMessage( GroupIndex, Repl(CountMessage, "%i", _TicksCount - _TickIndex), Manager.CounterMessageClass );
+		Sleep( 1.01f );
 	}
 
-	Manager.GroupSendMessage( GroupIndex, class'HUD'.default.RedColor $ GoMessage );
+	Manager.GroupSendMessage( GroupIndex, class'HUD'.default.RedColor $ GoMessage, Manager.CounterMessageClass );
 	Destroy();
 }
 
 defaultproperties
 {
-	CountMessage="%i..."
+	PrepareMessage="!"
+	CountMessage="%i"
 	GoMessage="GO!"
 }

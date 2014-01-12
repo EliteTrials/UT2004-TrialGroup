@@ -29,7 +29,7 @@ var editconst noexport array<GroupTaskComplete> Tasks, OptionalTasks;
 var editconst const noexport Color GroupColor;
 var private noexport int NextGroupId, CurrentWanderersGroupId;
 
-var(Modules) class<GroupLocalMessage> GroupMessageClass, PlayerMessageClass, TaskMessageClass;
+var(Modules) class<GroupLocalMessage> GroupMessageClass, PlayerMessageClass, TaskMessageClass, CounterMessageClass;
 var(Modules) class<GroupInstance> GroupInstanceClass;
 var(Modules) class<GroupInteraction> GroupInteractionClass;
 var(Modules) class<GroupCounter> GroupCounterClass;
@@ -847,6 +847,7 @@ defaultproperties
 	GroupCounterClass=class'GroupCounter'
 	GroupRulesClass=class'GroupRules'
 	GroupPlayerReplicationInfoClass=class'GroupPlayerLinkedReplicationInfo'
+	CounterMessageClass=class'GroupCounterLocalMessage'
 
 	GeneratedGroupName="Explorers"
 }
