@@ -54,7 +54,7 @@ function Trigger( Actor Other, Pawn Instigator )
 		{
 			optionalmsg = "(" $ Manager.GetGroupCompletedTasks( groupindex, True ) $ "/" $ Manager.OptionalTasks.Length $ ")";
 		}
-		Manager.GroupSendMessage( groupindex, "Group task" @ TaskName $ "(" $ Manager.GetGroupCompletedTasks( groupindex, False ) $ "/" $ Manager.Tasks.Length $ ")" $ optionalmsg @ "completed!" );
+		Manager.GroupSendMessage( groupindex, TaskName @ "(" $ Manager.GetGroupCompletedTasks( groupindex, False ) $ "/" $ Manager.Tasks.Length $ ")" @ optionalmsg @ "completed!", Manager.TaskMessageClass );
 
 		if( bOptionalTask )
 		{

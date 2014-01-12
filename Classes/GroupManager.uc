@@ -1,6 +1,6 @@
 /*==============================================================================
    TrialGroup
-   Copyright (C) 2010 Eliot Van Uytfanghe
+   Copyright (C) 2010 - 2014 Eliot Van Uytfanghe
 
    This program is free software; you can redistribute and/or modify
    it under the terms of the Open Unreal Mod License version 1.1.
@@ -19,15 +19,25 @@ struct sGroup
 	var editconst float LastCountDown;
 
 	var editconst array<GroupTaskComplete> CompletedTasks;
+
+	var GroupInstance Instance;
 };
 
 var editconst noexport array<sGroup> Groups;
 var editconst noexport array<GroupObjective> Objectives;
 var editconst noexport array<GroupTaskComplete> Tasks, OptionalTasks;
 var editconst const noexport Color GroupColor;
+var private noexport int NextGroupId, CurrentWanderersGroupId;
 
-var() const int MaxGroupSize;
+var(Modules) class<GroupLocalMessage> GroupMessageClass, PlayerMessageClass, TaskMessageClass, CounterMessageClass;
+var(Modules) class<GroupInstance> GroupInstanceClass;
+var(Modules) class<GroupInteraction> GroupInteractionClass;
+var(Modules) class<GroupCounter> GroupCounterClass;
+var(Modules) class<GroupRules> GroupRulesClass;
+var(Modules) class<GroupPlayerLinkedReplicationInfo> GroupPlayerReplicationInfoClass;
 
+var() int MaxGroupSize;
+var() string GeneratedGroupName;
 var() private editconst const noexport string Info;
 
 // Operator from ServerBTimes.u
@@ -57,6 +67,11 @@ event PreBeginPlay()
 	{
 		Objectives[Objectives.Length] = Obj;
 		Obj.Manager = Self;
+	}
+
+	if( Objectives.Length == 0 )
+	{
+		Log( "Warning: this map has no group objectives!" );
 	}
 
 	foreach AllActors( Class'GroupTrigger', Tsk )
@@ -92,34 +107,94 @@ event PostBeginPlay()
 	local GroupRules gr;
 
 	super.PostBeginPlay();
-	SetTimer( 120, True );
-	Timer();
+	SetTimer( 5, True );
 
-	gr = Spawn( Class'GroupRules', Self );
+	gr = Spawn( GroupRulesClass, self );
 	gr.Manager = Self;
 	Level.Game.AddGameModifier( gr );
 }
 
 event Timer()
 {
-	Level.Game.Broadcast( Self, GroupColor $ " Use 'Mutate JoinGroup <GroupName>' or 'Mutate LeaveGroup' in order to play this grouping map!" );
-
 	// try clear groups that have became empty by leavers...
 	ClearEmptyGroups();
 }
 
-function ModifyPlayer( Pawn Other )
+final function int CreateWanderersGroup()
 {
-	super.ModifyPlayer( Other );
-	if( Other == None )
+	local int groupIndex;
+
+	groupIndex = CreateGroup( GeneratedGroupName $ "-" $ NextGroupId );
+	if( groupindex == -1 )
+	{
+		Warn( "Failed to generate a Wanderers group" );
+		return -1;
+	}
+
+	CurrentWanderersGroupId = Groups[groupIndex].Instance.GroupId;
+	return groupIndex;
+}
+
+final function JoinWanderersGroup( PlayerController PC )
+{
+	local int groupIndex;
+
+	groupIndex = GetGroupIndexById( CurrentWanderersGroupId );
+	if( groupIndex == -1 )
+	{
+		groupIndex = CreateWanderersGroup();
+		if( groupIndex == -1 )
+		{
+			Warn( "Failed to join a Wanderers group" );
+			return;
+		}
+	}
+
+	if( Groups[groupIndex].Members.Length == MaxGroupSize )
+	{
+		groupIndex = CreateWanderersGroup();
+		if( groupIndex == -1 )
+		{
+			Warn( "Failed to generate a new Wanderers group" );
+			return;
+		}
+	}
+	JoinGroup( PC, Groups[groupIndex].GroupName );
+}
+
+function ModifyPlayer( Pawn other )
+{
+	local GroupPlayerLinkedReplicationInfo LRI;
+
+	super.ModifyPlayer( other );
+	if( other == None )
 	{
 		return;
 	}
 
-	if( ASPlayerReplicationInfo(Other.PlayerReplicationInfo) != None && string(Other.LastStartSpot.Class) != "BTServer_CheckPointNavigation" )
+	if( ASPlayerReplicationInfo(other.PlayerReplicationInfo) != none && string(other.LastStartSpot.Class) != "BTServer_CheckPointNavigation" )
 	{
-		ASPlayerReplicationInfo(Other.PlayerReplicationInfo).DisabledObjectivesCount = 0;
-		ASPlayerReplicationInfo(Other.PlayerReplicationInfo).DisabledFinalObjective = 0;
+		ASPlayerReplicationInfo(other.PlayerReplicationInfo).DisabledObjectivesCount = 0;
+		ASPlayerReplicationInfo(other.PlayerReplicationInfo).DisabledFinalObjective = 0;
+	}
+
+	if( PlayerController(other.Controller) == none )
+	{
+		return;
+	}
+
+	LRI = GetGroupPlayerReplicationInfo( other.Controller );
+	if( LRI != none )
+	{	
+		if( LRI.bIsWanderer )
+		{
+			JoinWanderersGroup( PlayerController(other.Controller) );
+			LRI.bIsWanderer = false;
+		}
+		else if( LRI.PlayerGroup == none )
+		{
+			SendPlayerMessage( other.Controller, " Use console command 'JoinGroup <GroupName>' to join/create a group!" );
+		}
 	}
 }
 
@@ -133,17 +208,12 @@ function Mutate( string MutateString, PlayerController Sender )
 
 	if( Left( MutateString, 9 ) ~= "JoinGroup" )
 	{
-		if( Objectives.Length == 0 )
-		{
-			Sender.ClientMessage( GroupColor $ "Sorry this feature is disabled because this map does not support the grouping system!" );
-			return;
-		}
-
-		LeaveGroup( Sender, true );
-
 		groupname = Mid( MutateString, 10 );
 		if( groupname != "" )
 		{
+			// Clear the groups of disconnected players.
+			// Important to not use ClearEmptyGroup by index as it may destroy the group (about to be joined) as a result.
+			ClearEmptyGroups();
 			JoinGroup( Sender, groupname );
 		}
 		else
@@ -154,23 +224,11 @@ function Mutate( string MutateString, PlayerController Sender )
 	}
 	else if( MutateString ~= "LeaveGroup" )
 	{
-		if( Objectives.Length == 0 )
-		{
-			Sender.ClientMessage( GroupColor $ "Sorry this feature is disabled because this map does not support the grouping system!" );
-			return;
-		}
-
 		LeaveGroup( Sender );
 		return;
 	}
 	else if( Left( MutateString, 14 ) ~= "GroupCountDown" )
 	{
-		if( Objectives.Length == 0 )
-		{
-			Sender.ClientMessage( GroupColor $ "Sorry this feature is disabled because this map does not support the grouping system!" );
-			return;
-		}
-
 		CountDownGroup( Sender, int(Mid( MutateString, 15)) );
 		return;
 	}
@@ -179,27 +237,26 @@ function Mutate( string MutateString, PlayerController Sender )
 
 final function JoinGroup( PlayerController PC, string groupName )
 {
-	local int groupindex, fmi;
+	local int groupindex;
 
 	if( PC.Pawn == None )
 	{
-		PC.ClientMessage( GroupColor $ "Sorry you cannot join any group while you are dead!" );
+		PC.ClientMessage( GroupColor $ "Sorry you cannot join a group when you are dead!" );
 		return;
 	}
 
-	if( VSize( PC.Pawn.LastStartSpot.Location - PC.Pawn.Location ) >= 100 )
+	if( VSize( PC.Pawn.LastStartSpot.Location - PC.Pawn.Location ) >= 200 )
 	{
-		PC.ClientMessage( GroupColor $ "Sorry you can only join a group when you are near spawn" );
+		PC.ClientMessage( GroupColor $ "Sorry you can only join a group when you are near your spawn location" );
 		return;
 	}
 
     groupindex = GetGroupIndexByName( groupName );
 	if( groupindex != -1 )
 	{
-		fmi = GetMemberIndexbyGroupIndex( PC, groupindex );
-		if( fmi != -1 )
+		if( GetMemberIndexbyGroupIndex( PC, groupindex ) != -1 )
 		{
-			PC.ClientMessage( GroupColor $ "Sorry you already are in this group!" );
+			PC.ClientMessage( GroupColor $ "Sorry you're already in this group!" );
 		}
 		else
 		{
@@ -209,30 +266,160 @@ final function JoinGroup( PlayerController PC, string groupName )
 			}
 			else
 			{
+				if( !LeaveGroup( PC ) )
+				{
+					PC.ClientMessage( GroupColor $ "Cannot join group. Something went wrong when leaving your previous group!" );
+					return;
+				}
+
+				// Get new index, because LeaveGroup may remove empty groups, moving the index.
+				groupindex = GetGroupIndexByName( groupName );
+				if( groupindex == -1 )
+				{
+					Warn( "This should never happen. Group not found after leaving previous group!" );
+					return;
+				}
+
 				GroupSendMessage( groupindex, PC.PlayerReplicationInfo.PlayerName @ "Joined your group!" );
-
-				Groups[groupindex].Members[Groups[groupindex].Members.Length] = PC;
-				PC.ClientMessage( GroupColor $ "You joined the group" @ Groups[groupindex].GroupName );
-
-				Level.Game.Broadcast( Self, GroupColor $ PC.PlayerReplicationInfo.PlayerName @ "Joined the group" @ Groups[groupindex].GroupName );
+				AddPlayerToGroup( PC, groupindex );
+				SendPlayerMessage( PC, "You joined the \"" $ Groups[groupindex].GroupName $ "\" group" );
 			}
 		}
 	}
 	else
 	{
-		groupindex = Groups.Length;
-		Groups.Length = groupindex + 1;
-		Groups[groupindex].GroupName = groupName;
-		Groups[groupindex].Members[Groups[groupindex].Members.Length] = PC;
-		PC.ClientMessage( GroupColor $ "You created the group" @ Groups[groupindex].GroupName $ ", you need" @ MaxGroupSize - 1 @ "more members for a functional group" );
-		Level.Game.Broadcast( Self, GroupColor $ PC.PlayerReplicationInfo.PlayerName @ "Created the group" @ Groups[groupindex].GroupName );
+		if( !LeaveGroup( PC ) )
+		{
+			PC.ClientMessage( GroupColor $ "Cannot create group. Something went wrong when leaving your previous group!" );
+			return;
+		}
+
+		groupindex = CreateGroup( groupName, PC );
+		if( groupindex == -1 )
+		{
+			PC.ClientMessage( GroupColor $ "Sorry something went wrong when creating the group!" );
+			return;
+		}
+		SendPlayerMessage( PC, "You created the \"" $ Groups[groupindex].GroupName $ "\" group" );
 	}
 }
 
+final function bool AddPlayerToGroup( PlayerController PC, int groupIndex )
+{
+	local GroupPlayerLinkedReplicationInfo LRI;
+
+	// Log( "AddPlayerToGroup(" $ PC $ ", " $ Groups[groupindex].GroupName $ ")" );
+	LRI = GetGroupPlayerReplicationInfo( PC );
+	if( LRI != none )
+	{
+		LRI.PlayerGroup = Groups[groupindex].Instance;
+		if( LRI.PlayerGroup == none )
+		{
+			Warn( "PlayerGroup was none when adding player to group" );
+		}
+		else if( LRI.PlayerGroup.Commander == none )
+		{
+			LRI.PlayerGroup.Commander = LRI;
+		}
+		else
+		{
+			LRI.NextMember = LRI.PlayerGroup.Commander;
+			LRI.PlayerGroup.Commander = LRI;
+		}
+	}
+	else
+	{
+		Warn( "Couldn't find LRI when adding player to group" );
+	}
+	Groups[groupindex].Members[Groups[groupindex].Members.Length] = PC;
+	return true;
+}
+
+final function bool RemoveMemberFromGroup( int memberIndex, int groupIndex )
+{
+	local GroupPlayerLinkedReplicationInfo LRI, member;
+
+	// Log( "RemoveMemberFromGroup(" $ Groups[groupIndex].Members[memberIndex].GetHumanReadableName() $ ", " $ Groups[groupindex].GroupName $ ")" );
+	if( groupIndex >= Groups.Length || memberindex >= Groups[groupIndex].Members.Length )
+	{
+		return false;
+	}
+
+	LRI = GetGroupPlayerReplicationInfo( Groups[groupIndex].Members[memberindex] );
+	if( LRI != none )
+	{
+		if( LRI.PlayerGroup != none )
+		{
+			if( LRI.PlayerGroup.Commander == LRI )
+			{
+				LRI.PlayerGroup.Commander = LRI.NextMember;
+			}
+			else
+			{
+				for( member = LRI.PlayerGroup.Commander; member != none; member = member.NextMember )
+				{
+					if( member.NextMember == LRI )
+					{
+						member.NextMember = LRI.NextMember;
+						break;
+					}
+				}
+			}
+		}
+		LRI.NextMember = none;
+		LRI.PlayerGroup = none;
+	}
+	else
+	{
+		Warn( "Couldn't find LRI when removing player from group" );
+	}
+	Groups[groupIndex].Members.Remove( memberIndex, 1 );
+	return true;
+}
+
+final function int CreateGroup( string groupName, optional PlayerController commander )
+{
+	local GroupInstance instance;
+	local int groupIndex;
+
+	// Log( "CreateGroup(" $ groupName $ ", " $ commander.GetHumanReadableName() $ ")" );
+	if( GetGroupIndexByName( groupName ) != -1 )
+	{
+		return -1;
+	}
+
+	// Don't create a new group for commander if he/she can't leave its current group.
+	if( commander != none && !LeaveGroup( commander ) )
+	{
+		return -1;
+	}
+
+	instance = Spawn( GroupInstanceClass, self );
+	if( instance == none )
+	{
+		return -1;
+	}
+
+	groupIndex = Groups.Length;
+	Groups.Length = groupIndex + 1;
+	Groups[groupIndex].Instance = instance;
+	Groups[groupIndex].GroupName = groupName;
+
+	instance.GroupId = NextGroupId ++;
+	instance.GroupName = groupName;
+
+	if( commander != none )
+	{
+		AddPlayerToGroup( commander, groupindex );
+	}
+	return groupindex;
+}
+
 // Check if this player already is within a group in that case remove him and remove the group if it turns empty!.
-final function LeaveGroup( PlayerController PC, optional bool bNoMessages )
+final function bool LeaveGroup( PlayerController PC, optional bool bNoMessages )
 {
 	local int groupindex, memberindex;
+	local bool vReturnValue;
 
 	if( PC.Pawn == None )
 	{
@@ -240,38 +427,38 @@ final function LeaveGroup( PlayerController PC, optional bool bNoMessages )
 		{
 			PC.ClientMessage( GroupColor $ "Sorry you cannot leave a group while you are dead!" );
 		}
-		return;
+		return false;
 	}
 
-	if( VSize( PC.Pawn.LastStartSpot.Location - PC.Pawn.Location ) >= 100 )
+	if( VSize( PC.Pawn.LastStartSpot.Location - PC.Pawn.Location ) >= 200 )
 	{
 		if( !bNoMessages )
 		{
-			PC.ClientMessage( GroupColor $ "Sorry you can only leave a group when you are near spawn" );
+			PC.ClientMessage( GroupColor $ "Sorry you can only leave a group if you are near your spawn location" );
 		}
-		return;
+		return false;
 	}
 
 	groupindex = GetGroupIndexByPlayer( PC, memberindex );
 	if( groupindex != -1 && memberindex != -1 )
 	{
-		Groups[groupindex].Members.Remove( memberindex, 1 );
+		vReturnValue = RemoveMemberFromGroup( memberindex, groupindex );
 		if( !bNoMessages )
 		{
-			PC.ClientMessage( GroupColor $ "You left the group" @ Groups[groupindex].GroupName );
+			SendPlayerMessage( PC, "You left the group \"" $ Groups[groupindex].GroupName $ "\"" );
 			GroupSendMessage( groupindex, PC.PlayerReplicationInfo.PlayerName @ "Left your group!" );
-			Level.Game.Broadcast( Self, GroupColor $ PC.PlayerReplicationInfo.PlayerName @ "Left the group" @ Groups[groupindex].GroupName );
 		}
 		// Check if this group became empty, or whether the group has players that no longer exist, therefor clear those.
 		ClearEmptyGroup( groupindex );
+		return vReturnValue;
 	}
 	// else not in a group!
+	return true;
 }
 
-final function CountDownGroup( PlayerController PC, int Amount )
+final function CountDownGroup( PlayerController PC, int ticks )
 {
-	local GroupCounter Counter;
-	local int groupindex;
+	local int groupIndex;
 
 	if( PC.Pawn == None )
 	{
@@ -279,26 +466,23 @@ final function CountDownGroup( PlayerController PC, int Amount )
 		return;
 	}
 
-	Amount = Max( Min( Amount, 3 ), 1 );
-	groupindex = GetGroupIndexByPlayer( PC );
-	if( groupindex != -1 )
+	groupIndex = GetGroupIndexByPlayer( PC );
+	if( groupIndex != -1 )
 	{
-		if( Level.TimeSeconds - Groups[groupindex].LastCountDown >= (Amount + 0.5f) )
+		ticks = Max( Min( ticks, 3 ), 1 );
+		if( Level.TimeSeconds - Groups[groupIndex].LastCountDown >= (ticks + 0.5f) )
 		{
-			Counter = Spawn( Class'GroupCounter', Self );
-			Counter.Members = Groups[groupindex].Members;
-			Counter.Counts = Amount;
-			Groups[groupindex].LastCountDown = Level.TimeSeconds;
-			Counter.Start();
+			Groups[groupIndex].LastCountDown = Level.TimeSeconds;
+			Spawn( GroupCounterClass, self ).Start( groupIndex, ticks );
 		}
 		else
 		{
-			PC.ClientMessage( GroupColor $ "Sorry you cannot start a coundown while your group's counter is active!" );
+			PC.ClientMessage( GroupColor $ "Sorry you cannot start a coundown when your group's counter is active!" );
 		}
 	}
 	else
 	{
-		PC.ClientMessage( GroupColor $ "Sorry you cannot start a countdown because your not in a group!" );
+		PC.ClientMessage( GroupColor $ "Sorry you cannot start a countdown when you're not in a group!" );
 	}
 }
 
@@ -320,9 +504,23 @@ final function int GetGroupIndexByPlayer( Controller C, optional out int foundMe
 	return -1;
 }
 
+final function int GetGroupIndexById( int groupId )
+{
+	local int i;
+
+	for( i = 0; i < Groups.Length; ++ i )
+	{
+		if( Groups[i].Instance.GroupId == groupId )
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
 final function int GetGroupIndexByName( string groupName )
 {
-	local int i, m;
+	local int i;
 
 	for( i = 0; i < Groups.Length; ++ i )
 	{
@@ -377,7 +575,7 @@ final function GetMembersByGroupIndex( int groupIndex, out array<Controller> mem
 	}
 }
 
-final function GroupSendMessage( int groupIndex, string groupMessage )
+final function GroupSendMessage( int groupIndex, string groupMessage, optional class<GroupLocalMessage> messageClass )
 {
 	local int m;
 	local Controller C;
@@ -387,33 +585,66 @@ final function GroupSendMessage( int groupIndex, string groupMessage )
 		return;
 	}
 
+	// Group is no longer active?
+	if( groupIndex >= Groups.Length )
+	{
+		return;
+	}
+
 	for( m = 0; m < Groups[groupIndex].Members.Length; ++ m )
 	{
 		if( Groups[groupIndex].Members[m] != None )
 		{
-			PlayerController(Groups[groupIndex].Members[m]).ClientMessage( GroupColor $ groupMessage );
-
+			SendGroupMessage( Groups[groupIndex].Members[m], groupMessage, messageClass );
 			// Check all controllers whether they are spectating this member!.
 			for( C = Level.ControllerList; C != None; C = C.NextController )
 			{
 				// Hey not to myself(incase)
-				if( C == Groups[groupIndex].Members[m] )
+				if( C == Groups[groupIndex].Members[m] || PlayerController(C) == none )
 				{
 					continue;
 				}
 
 				if( PlayerController(C).RealViewTarget == Groups[groupIndex].Members[m] )
 				{
-					PlayerController(C).ClientMessage( GroupColor $ groupMessage );
+					SendGroupMessage( C, groupMessage, messageClass );
 				}
 			}
 		}
 	}
 }
 
+final function SendGroupMessage( Controller C, string message, optional class<GroupLocalMessage> messageClass )
+{
+	local GroupPlayerLinkedReplicationInfo LRI;
+
+	if( messageClass == none )
+	{
+		messageClass = GroupMessageClass;
+	}
+
+	LRI = GetGroupPlayerReplicationInfo( C );
+	LRI.ClientSendMessage( messageClass, GroupColor $ message );
+	// Groups[groupIndex].Instance.SetQueueMessage( message );
+	//C.ReceiveLocalizedMessage( GroupMessageClass,,,, Groups[groupIndex].Instance );
+}
+
+final function SendPlayerMessage( Controller C, string message )
+{
+	local GroupPlayerLinkedReplicationInfo LRI;
+
+	LRI = GetGroupPlayerReplicationInfo( C );
+	LRI.ClientSendMessage( PlayerMessageClass, GroupColor $ message );
+}
+
+final function SendGlobalMessage( string message )
+{
+	Level.Game.Broadcast( Self, GroupColor $ message );
+}
+
 final function int GetGroupCompletedTasks( int groupIndex, bool bOptional )
 {
-	local int i, numtasks, t;
+	local int i, numtasks;
 
 	if( Groups.Length == 0 )
 	{
@@ -465,51 +696,65 @@ final function RewardGroup( int groupIndex, int objectivesAmount )
 	}
 }
 
+final function bool ShouldRemoveMember( int groupIndex, int memberIndex )
+{
+	local Controller c;
+
+	c = Groups[groupIndex].Members[memberIndex];
+	if( c == none || c.PlayerReplicationInfo.bOnlySpectator || c.PlayerReplicationInfo.bIsSpectator )
+	{
+		return true;
+	}
+	return false;
+}
+
 final function ClearEmptyGroups()
 {
-	local int i, m;
+	local int groupIndex;
 
-	for( i = 0; i < Groups.Length; ++ i )
+	for( groupIndex = 0; groupIndex < Groups.Length; ++ groupIndex )
 	{
-		for( m = 0; m < Groups[i].Members.Length; ++ m )
+		if( ClearEmptyGroup( groupIndex ) )
 		{
-			if( Groups[i].Members[m] == None )
-			{
-				Groups[i].Members.Remove( m, 1 );
-				-- m;
-			}
-		}
-
-		if( Groups[i].Members.Length == 0 )
-		{
-			Groups.Remove( i, 1 );
-			-- i;
+			-- groupIndex;
 		}
 	}
 }
 
-final function ClearEmptyGroup( int groupIndex )
+final function bool ClearEmptyGroup( int groupIndex )
 {
 	local int m;
-
-	if( Groups.Length == 0 )
-	{
-		return;
-	}
+	local Controller member;
 
 	for( m = 0; m < Groups[groupIndex].Members.Length; ++ m )
 	{
-		if( Groups[groupIndex].Members[m] == None )
+		member = Groups[groupIndex].Members[m];
+		if( ShouldRemoveMember( groupIndex, m ) && RemoveMemberFromGroup( m, groupIndex ) )
 		{
-			Groups[groupIndex].Members.Remove( m, 1 );
 			-- m;
+			if( member != none )
+			{
+				SendPlayerMessage( member, "You left the group \"" $ Groups[groupIndex].GroupName $ "\"" );
+				GroupSendMessage( groupIndex, member.PlayerReplicationInfo.PlayerName @ "Left your group!" );
+			}
+			else
+			{
+				GroupSendMessage( groupIndex, "A player has left your group!" );
+			}
 		}
 	}
 
 	if( Groups[groupIndex].Members.Length == 0 )
 	{
+		if( Groups[groupIndex].Instance != none )
+		{
+			Groups[groupIndex].Instance.Destroy();
+		}
+		Log( "Removing empty group" @ Groups[groupIndex].GroupName );
 		Groups.Remove( groupIndex, 1 );
+		return true;
 	}
+	return false;
 }
 
 simulated event Tick( float DeltaTime )
@@ -525,7 +770,7 @@ simulated event Tick( float DeltaTime )
 	PC = Level.GetLocalPlayerController();
 	if( PC != None && PC.Player != None && PC.Player.InteractionMaster != None )
 	{
-		PC.Player.InteractionMaster.AddInteraction( string( Class'GroupInteraction' ), PC.Player );
+		PC.Player.InteractionMaster.AddInteraction( string(GroupInteractionClass), PC.Player );
 		Disable('Tick');
 		return;
     }
@@ -540,6 +785,42 @@ function Reset()
 	{
 		Groups[i].CompletedTasks.Length = 0;
 	}
+}
+
+final static Function GroupPlayerLinkedReplicationInfo GetGroupPlayerReplicationInfo( Controller c )
+{
+	local LinkedReplicationInfo LRI;
+
+	if( c == none )
+	{
+		return none;
+	}
+
+	for( LRI = C.PlayerReplicationInfo.CustomReplicationInfo; LRI != None; LRI = LRI.NextReplicationInfo )
+	{
+		if( GroupPlayerLinkedReplicationInfo(LRI) == none )
+		{
+			continue;
+		}	
+		return GroupPlayerLinkedReplicationInfo(LRI);
+	}
+	return none;
+}
+
+function bool CheckReplacement( Actor Other, out byte bSuperRelevant )
+{
+	local LinkedReplicationInfo LRI;
+
+	if( PlayerReplicationInfo(Other) != none )
+	{
+		if( Other.Owner != none && MessagingSpectator(Other.Owner) == none )
+		{
+			LRI = Spawn( GroupPlayerReplicationInfoClass, Other.Owner );
+			LRI.NextReplicationInfo = PlayerReplicationInfo(Other).CustomReplicationInfo;
+			PlayerReplicationInfo(Other).CustomReplicationInfo = LRI;
+		}
+	}
+	return true;
 }
 
 defaultproperties
@@ -557,4 +838,16 @@ defaultproperties
 	RemoteRole=ROLE_SimulatedProxy
 	bNoDelete=True
 	bStatic=False
+
+	GroupMessageClass=class'GroupLocalMessage'
+	PlayerMessageClass=class'GroupPlayerLocalMessage'
+	TaskMessageClass=class'GroupTaskLocalMessage'
+	GroupInstanceClass=class'GroupInstance'
+	GroupInteractionClass=class'GroupInteraction'
+	GroupCounterClass=class'GroupCounter'
+	GroupRulesClass=class'GroupRules'
+	GroupPlayerReplicationInfoClass=class'GroupPlayerLinkedReplicationInfo'
+	CounterMessageClass=class'GroupCounterLocalMessage'
+
+	GeneratedGroupName="Explorers"
 }

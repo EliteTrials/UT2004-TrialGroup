@@ -22,7 +22,7 @@ function Trigger( Actor Other, Pawn Instigator )
 	groupindex = Manager.GetGroupIndexByPlayer( Instigator.Controller );
 	if( groupindex != -1 )
 	{
-		Manager.GroupSendMessage( groupindex, Repl( GroupMessage, "%GROUPNAME%", Manager.Groups[groupindex].GroupName ) );
+		Manager.GroupSendMessage( groupindex, Repl( GroupMessage, "%GROUPNAME%", "\"" $ Manager.Groups[groupindex].GroupName $ "\"" ) );
 	}
 	// else no group
 }

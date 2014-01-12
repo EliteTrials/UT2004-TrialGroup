@@ -72,7 +72,7 @@ event PawnEnteredVolume( Pawn Other )
 			}
 		}
 
-		missingmembers = (Manager.Groups[groupindex].Members.Length - foundmembers.Length);
+		missingmembers = (Manager.MaxGroupSize - foundmembers.Length);
 
 		// The group is full and all of them are in the volume!, then triggerevent...
 		if( foundmembers.Length == Manager.MaxGroupSize && missingmembers == 0 )
@@ -84,7 +84,11 @@ event PawnEnteredVolume( Pawn Other )
 		{
 			for( i = 0; i < foundmembers.Length; ++ i )
 			{
-				PlayerController(foundmembers[i]).ClientMessage( Class'GroupManager'.Default.GroupColor $ "You need" @ missingmembers @ "more members in this volume!" );
+				Manager.SendPlayerMessage( foundmembers[i], Eval( 
+					missingmembers > 1, 
+					"You need" @ missingmembers @ "more members in this volume!",
+					"You need one more member in this volume!"
+				));
 			}
 		}
 	}
@@ -149,6 +153,6 @@ function Reset()
 
 defaultproperties
 {
-	Info="All members of a group(group must also be full) must enter this volume in order to cause the volume to trigger the specified event"
+	Info="All members of a group(group must also be full) have to enter this volume to trigger its event."
 	//bStatic=False
 }
