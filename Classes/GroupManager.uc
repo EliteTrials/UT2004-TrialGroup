@@ -107,8 +107,7 @@ event PostBeginPlay()
 	local GroupRules gr;
 
 	super.PostBeginPlay();
-	SetTimer( 120, True );
-	Timer();
+	SetTimer( 5, True );
 
 	gr = Spawn( GroupRulesClass, self );
 	gr.Manager = Self;
@@ -117,8 +116,6 @@ event PostBeginPlay()
 
 event Timer()
 {
-	SendGlobalMessage( " Use 'JoinGroup <GroupName>' or 'LeaveGroup' in order to play this grouping map!" );
-
 	// try clear groups that have became empty by leavers...
 	ClearEmptyGroups();
 }
@@ -193,6 +190,10 @@ function ModifyPlayer( Pawn other )
 		{
 			JoinWanderersGroup( PlayerController(other.Controller) );
 			LRI.bIsWanderer = false;
+		}
+		else if( LRI.PlayerGroup == none )
+		{
+			SendPlayerMessage( other.Controller, " Use console command 'JoinGroup <GroupName>' to join/create a group!" );
 		}
 	}
 }
@@ -695,47 +696,51 @@ final function RewardGroup( int groupIndex, int objectivesAmount )
 	}
 }
 
+final function bool ShouldRemoveMember( int groupIndex, int memberIndex )
+{
+	local Controller c;
+
+	c = Groups[groupIndex].Members[memberIndex];
+	if( c == none || c.PlayerReplicationInfo.bOnlySpectator || c.PlayerReplicationInfo.bIsSpectator )
+	{
+		return true;
+	}
+	return false;
+}
+
 final function ClearEmptyGroups()
 {
-	local int i, m;
+	local int groupIndex;
 
-	for( i = 0; i < Groups.Length; ++ i )
+	for( groupIndex = 0; groupIndex < Groups.Length; ++ groupIndex )
 	{
-		for( m = 0; m < Groups[i].Members.Length; ++ m )
+		if( ClearEmptyGroup( groupIndex ) )
 		{
-			if( Groups[i].Members[m] == none && RemoveMemberFromGroup( m, i ) )
-			{
-				-- m;
-			}
-		}
-
-		if( Groups[i].Members.Length == 0 )
-		{
-			if( Groups[i].Instance != none )
-			{
-				Groups[i].Instance.Destroy();
-			}
-			Log( "Removing empty group" @ Groups[i].GroupName );
-			Groups.Remove( i, 1 );
-			-- i;
+			-- groupIndex;
 		}
 	}
 }
 
-final function ClearEmptyGroup( int groupIndex )
+final function bool ClearEmptyGroup( int groupIndex )
 {
 	local int m;
-
-	if( Groups.Length == 0 )
-	{
-		return;
-	}
+	local Controller member;
 
 	for( m = 0; m < Groups[groupIndex].Members.Length; ++ m )
 	{
-		if( Groups[groupIndex].Members[m] == none && RemoveMemberFromGroup( m, groupIndex ) )
+		member = Groups[groupIndex].Members[m];
+		if( ShouldRemoveMember( groupIndex, m ) && RemoveMemberFromGroup( m, groupIndex ) )
 		{
 			-- m;
+			if( member != none )
+			{
+				SendPlayerMessage( member, "You left the group \"" $ Groups[groupIndex].GroupName $ "\"" );
+				GroupSendMessage( groupIndex, member.PlayerReplicationInfo.PlayerName @ "Left your group!" );
+			}
+			else
+			{
+				GroupSendMessage( groupIndex, "A player has left your group!" );
+			}
 		}
 	}
 
@@ -747,7 +752,9 @@ final function ClearEmptyGroup( int groupIndex )
 		}
 		Log( "Removing empty group" @ Groups[groupIndex].GroupName );
 		Groups.Remove( groupIndex, 1 );
+		return true;
 	}
+	return false;
 }
 
 simulated event Tick( float DeltaTime )
