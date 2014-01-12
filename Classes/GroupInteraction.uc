@@ -109,6 +109,7 @@ function PostRender( Canvas C )
 	local vector camLoc, dir, aX, aY, aZ;
 	local rotator camRot;
 	local GroupInstance group;
+	local bool bIsMemberOfMyGroup, bIsInSight;
 
 	if( ViewportOwner.Actor.myHUD.bShowScoreBoard || ViewportOwner.Actor.myHUD.bHideHUD || ViewportOwner.Actor.PlayerReplicationInfo == None )
 		return;
@@ -124,6 +125,11 @@ function PostRender( Canvas C )
 		target = ViewportOwner.Actor;
 	}
 
+	if( target == none )
+	{
+		return;
+	}
+
 	myLRI = class'GroupManager'.static.GetGroupPlayerReplicationInfo( target );
 	if( myLRI == none )
 	{
@@ -135,17 +141,13 @@ function PostRender( Canvas C )
 	{
 		for( LRI = group.Commander; LRI != none; LRI = LRI.NextMember )
 		{
-			// C.SetPos( 0, y );
-			// C.DrawText( LRI );
-			// y += 20;
-
-			pawn = LRI.Pawn;
-			if( pawn == none || ViewportOwner.Actor.ViewTarget == none )
+			if( LRI == myLRI )
 			{
 				continue;
 			}
 
-			if( pawn.bHidden || pawn.bDeleteMe )
+			pawn = LRI.Pawn;
+			if( pawn == none || pawn.bHidden || pawn.bDeleteMe )
 			{
 				continue;
 			}
@@ -153,41 +155,48 @@ function PostRender( Canvas C )
 			C.GetCameraLocation( camLoc, camRot );
 			dir = pawn.Location - camLoc;
 			dist = VSize( dir );
-			if( dist > ViewportOwner.Actor.TeamBeaconMaxDist || !ViewportOwner.Actor.FastTrace( pawn.Location, camLoc ) )
+			if( dist > target.TeamBeaconMaxDist )
 			{
 				continue;
 			}
 
-			GetAxes( ViewportOwner.Actor.ViewTarget.Rotation, aX, aY, aZ );
+			GetAxes( target.Rotation, aX, aY, aZ );
 			dir /= dist;
 			if( !((dir dot aX) > 0.6) )
 			{
 				continue;
 			}
 
-			if( dist < ViewportOwner.Actor.TeamBeaconPlayerInfoMaxDist*0.4f )
-			{
-				if( LRI != myLRI )
+			bIsInSight = target.FastTrace( pawn.Location, camLoc );
+			bIsMemberOfMyGroup = group == myLRI.PlayerGroup;
+			av = C.WorldToScreen( pawn.Location );
+			C.DrawColor = LRI.PlayerGroup.GroupColor;
+			if( bIsMemberOfMyGroup )
+			{						
+				s = Eval( bIsInSight, LRI.PlayerGroup.GroupName, pawn.PlayerReplicationInfo.PlayerName );
+				if( bIsInSight )
 				{
-					av = C.WorldToScreen( pawn.Location );
-					C.DrawColor = LRI.PlayerGroup.GroupColor;
-					if( group == myLRI.PlayerGroup )
-					{						
-						C.DrawColor.A = 120;
-						class'HUD_Assault'.static.Draw_2DCollisionBox( C, pawn, av, LRI.PlayerGroup.GroupName, pawn.DrawScale, true );
-
-						s = ":" $ dist / 128 $ "m";
-						C.TextSize( s, xl, yl );
-						C.SetPos( av.x - xl*0.5, av.y );
-						C.DrawColor.A = 100;
-						C.DrawTextClipped( s );
-					}
-					else
-					{
-						C.DrawColor.A = 60;
-						class'HUD_Assault'.static.Draw_2DCollisionBox( C, pawn, av, LRI.PlayerGroup.GroupName, pawn.DrawScale, true );
-					}
+					C.DrawColor.A = 130;			
 				}
+				else
+				{
+					C.DrawColor.A = 60;
+				}
+			}
+			else
+			{
+				s = LRI.PlayerGroup.GroupName;
+				C.DrawColor.A = 90;
+			}
+
+			class'HUD_Assault'.static.Draw_2DCollisionBox( C, pawn, av, s, pawn.DrawScale, true );
+			if( bIsMemberOfMyGroup && !bIsInSight && dist < target.TeamBeaconPlayerInfoMaxDist )
+			{
+				s = dist/128 $ "m";
+				C.TextSize( s, xl, yl );
+				C.SetPos( av.x - xl*0.5, av.y );
+				C.DrawColor.A = 150;
+				C.DrawTextClipped( s );
 			}
 		}
 	}

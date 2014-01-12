@@ -189,7 +189,6 @@ function ModifyPlayer( Pawn other )
 	LRI = GetGroupPlayerReplicationInfo( other.Controller );
 	if( LRI != none )
 	{	
-		LRI.Pawn = other;
 		if( LRI.bIsWanderer )
 		{
 			JoinWanderersGroup( PlayerController(other.Controller) );

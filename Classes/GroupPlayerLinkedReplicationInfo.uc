@@ -30,6 +30,11 @@ simulated event PostNetBeginPlay()
 	{
 		SetOwner( Level.GetLocalPlayerController() );
 	}
+	else
+	{
+		SetTimer( 0.5, true );
+		Timer();
+	}
 }
 
 simulated function ClientSendMessage( class<GroupLocalMessage> messageClass, string message )
@@ -37,6 +42,20 @@ simulated function ClientSendMessage( class<GroupLocalMessage> messageClass, str
 	ClientMessage = message;
 	PlayerController(Owner).ReceiveLocalizedMessage( messageClass,,,, self );
 	PlayerController(Owner).Player.Console.Message( message, 1.0 );
+}
+
+event Timer()
+{
+	if( Owner == none )
+	{
+		SetTimer( 0.0, false );
+		return;
+	}
+
+	if( Pawn == none && Controller(Owner).Pawn != none )
+	{
+		Pawn = Controller(Owner).Pawn;
+	}
 }
 
 defaultproperties
