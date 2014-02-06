@@ -14,6 +14,9 @@ var() protected editconst const noexport string Info;
 
 var() int RequiredMembersCount;
 
+// Fallback for outdated maps.
+var deprecated string LastTriggeredByGroupName; 
+
 // Operator from ServerBTimes.u
 static final operator(102) string $( Color B, coerce string A )
 {

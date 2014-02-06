@@ -1,6 +1,6 @@
 /*==============================================================================
    TrialGroup
-   Copyright (C) 2010 Eliot Van Uytfanghe
+   Copyright (C) 2010 - 2014 Eliot Van Uytfanghe
 
    This program is free software; you can redistribute and/or modify
    it under the terms of the Open Unreal Mod License version 1.1.
@@ -8,7 +8,8 @@
 class GroupTaskComplete extends GroupTrigger
 	placeable;
 
-var() const string TaskName;
+var() localized const string TaskName;
+var() localized const string TaskMessage;
 var() const bool bOptionalTask;
 var() const enum EOptionalTaskReward
 {
@@ -56,6 +57,11 @@ function Trigger( Actor Other, Pawn Instigator )
 		}
 		Manager.GroupSendMessage( groupindex, TaskName @ "(" $ Manager.GetGroupCompletedTasks( groupindex, False ) $ "/" $ Manager.Tasks.Length $ ")" @ optionalmsg @ "completed!", Manager.TaskMessageClass );
 
+		if( TaskMessage != "" )
+		{
+			Manager.GroupSendMessage( groupindex, TaskMessage );
+		}
+
 		if( bOptionalTask )
 		{
 			Manager.RewardGroup( groupindex, OptionalTaskReward + 1 );
@@ -83,7 +89,8 @@ function Trigger( Actor Other, Pawn Instigator )
 defaultproperties
 {
 	TaskName="e.g. ShieldGun Sync (1)"
+	TaskMessage=""
 	bOptionalTask=False
 	OptionalTaskReward=OTR_Two
-	Info="Input a unique taskname for each GroupTaskComplete trigger!", NOT-YET-COMPLETE"
+	Info="Input a unique taskname for each GroupTaskComplete trigger."
 }
