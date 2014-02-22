@@ -1,6 +1,6 @@
 /*==============================================================================
    TrialGroup
-   Copyright (C) 2010 Eliot Van Uytfanghe
+   Copyright (C) 2010 - 2014 Eliot Van Uytfanghe
 
    This program is free software; you can redistribute and/or modify
    it under the terms of the Open Unreal Mod License version 1.1.
@@ -100,15 +100,11 @@ function PostRender( Canvas C )
 	local GroupPlayerLinkedReplicationInfo LRI, myLRI;
 	local HUD hud;
 	local HUD_Assault gamehud;
-	local Vector av, screenPos, camLoc;
-	local Rotator camRot;
-	// local vector bv;
+	local Vector av;
 	local float dist, xl, yl;
-	// local float x, y;
 	local string s;
 	local Actor target;
 	local Pawn pawn;
-	// local Pawn b;
 	local GroupInstance group;
 	local bool bIsMemberOfMyGroup;
 	local byte bIsInSight;
@@ -135,24 +131,26 @@ function PostRender( Canvas C )
 
 	hud = ViewportOwner.Actor.myHUD;
 	gamehud = HUD_Assault(hud);
-
 	if( myGroup != none )
 	{
 		foreach target.Region.Zone.ZoneActors( class'GroupTriggerVolume', volume )
 		{
-			if( IsTargetInView( C, target, volume.Location, ViewportOwner.Actor.TeamBeaconMaxDist, bIsInSight, dist ) && bIsInSight == 1 )
+			if( !volume.AllowRendering( myGroup, ViewportOwner.Actor ) )
 			{
-				volume.RenderVolume( C, myGroup, ViewportOwner.Actor );
 				continue;
 			}
 
-			if( dist > ViewportOwner.Actor.TeamBeaconMaxDist )
+			if( volume.AllowInfoRendering( myGroup, ViewportOwner.Actor ) && IsTargetInView( C, target, volume.Location, ViewportOwner.Actor.TeamBeaconMaxDist, bIsInSight, dist ) && bIsInSight == 1
+				)
+			{
+				volume.RenderInfo( C, myGroup, ViewportOwner.Actor );
 				continue;
+			}
 
-			screenPos = C.WorldToScreen( volume.Location );
-			C.DrawColor = myGroup.GroupColor;
-			C.DrawColor.A = 50;
-			gamehud.DrawActorTracking( C, volume, false, screenPos );
+			if( dist <= ViewportOwner.Actor.TeamBeaconMaxDist && volume.AllowTrackingRendering( myGroup, ViewportOwner.Actor ) )
+			{
+				volume.RenderTracking( C, gamehud, myGroup, ViewportOwner.Actor );
+			}
 		}
 	}
 
@@ -180,11 +178,11 @@ function PostRender( Canvas C )
 			av = C.WorldToScreen( pawn.Location );
 			C.DrawColor = LRI.PlayerGroup.GroupColor;
 			if( bIsMemberOfMyGroup )
-			{						
+			{
 				s = Eval( bIsInSight == 1, LRI.PlayerGroup.GroupName, pawn.PlayerReplicationInfo.PlayerName );
 				if( bIsInSight == 1 )
 				{
-					C.DrawColor.A = 130;			
+					C.DrawColor.A = 130;
 				}
 				else
 				{
@@ -210,7 +208,7 @@ function PostRender( Canvas C )
 	}
 }
 
-final function bool IsTargetInView( Canvas C, Actor viewer, Vector targetlocation, float maxDistance, optional out byte bIsVisible, optional out float distance )
+final static function bool IsTargetInView( Canvas C, Actor viewer, Vector targetlocation, float maxDistance, optional out byte bIsVisible, optional out float distance )
 {
 	local Rotator camRot;
 	local Vector camLoc, dir, x, y, z;

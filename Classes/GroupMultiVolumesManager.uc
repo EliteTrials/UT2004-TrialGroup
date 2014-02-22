@@ -8,10 +8,11 @@
 class GroupMultiVolumesManager extends Info
 	placeable;
 
-var() edfindable array<GroupMultiTriggerVolume> Links;
+var() edfindable array<edfindable GroupMultiTriggerVolume> Links;
+
 var() localized const string lzLinksNeed;
 var() localized const string lzPlayersMissing;
-var() private const name EventWhen;
+var() localized const string lzPartition;
 
 // Operator from ServerBTimes.u
 static final operator(102) string $( Color B, coerce string A )
@@ -35,7 +36,6 @@ function bool LinkEntered( GroupMultiTriggerVolume V, int groupIndex, Pawn Other
 {
 	local int i, missingmembers, filledlinks;
 	local array<Controller> foundmembers;
-	local string s;
 
 	if( V.HasAllMembers( groupindex, missingmembers, foundmembers ) )
 	{
@@ -59,9 +59,9 @@ function bool LinkEntered( GroupMultiTriggerVolume V, int groupIndex, Pawn Other
 			}
 		}
 		else
-		{       
-            v.Manager.GroupSendMessage( groupindex, Repl( lzLinksNeed, "%MISSINGLINKS%", Links.Length - filledlinks ) );
-            v.TriggerEvent( v.EventWhenFilledButNotAll, v, Other );
+		{
+            v.Manager.GroupSendMessage( groupindex, Repl( lzLinksNeed, "%MISSINGLINKS%", Links.Length - filledlinks ), v.Manager.GroupProgressMessageClass );
+            TriggerEvent( v.EventWhenFilledButNotAll, v, Other );
 		}
 		return true;
 	}
@@ -70,19 +70,23 @@ function bool LinkEntered( GroupMultiTriggerVolume V, int groupIndex, Pawn Other
 		// Let the group/member know what happened...
 		for( i = 0; i < foundmembers.Length; ++ i )
 		{
-			v.Manager.SendPlayerMessage( foundmembers[i], Eval( 
-				missingmembers > 1, 
+			v.Manager.SendPlayerMessage( foundmembers[i], Eval(
+				missingmembers > 1,
 				foundmembers.Length $ "/" $ v.GetRequiredMembersCount( v.Manager ) $ ", " $ missingmembers $ " more members required",
 				foundmembers.Length $ "/" $ v.GetRequiredMembersCount( v.Manager ) $ ", one more member required"
-			));
+			), v.Manager.GroupProgressMessageClass );
 		}
-        
-        v.Manager.GroupSendMessage( groupindex, "Another partition of the group is in need of " @ missingmembers @ "more people!" );
+
+		if( missingmembers == 0 )
+		{
+        	v.Manager.GroupSendMessage( groupindex, Repl(lzPartition, "%n", missingmembers), v.Manager.GroupProgressMessageClass );
+		}
 	}
+	return false;
 }
 
 defaultproperties
 {
 	lzLinksNeed="%MISSINGLINKS% more links need to be filled!"
-	bGameRelevant=true
+	lzPartition="Another partition is in need of %n more people!"
 }

@@ -11,7 +11,12 @@ class GroupMultiTriggerVolume extends GroupTriggerVolume;
 var deprecated editconst const byte RequiredMembers;
 
 var GroupMultiVolumesManager LinkManager;
-var() const name EventWhenFilledButNotAll;
+
+/**
+ * The event name to instigate if this volume is filled but the other linked volumes are not.
+ * Note: This is not affected by @ReTriggerDelay;
+ */
+var(Events) name EventWhenFilledButNotAll;
 
 event PawnEnteredVolume( Pawn Other )
 {
@@ -36,6 +41,16 @@ event PawnEnteredVolume( Pawn Other )
 	{
 		xPawn(Other).ClientMessage( class'GroupManager'.default.GroupColor $ "Sorry you cannot contribute to this volume because you are not in a group!" );
 	}
+}
+
+simulated event TriggerEvent( Name EventName, Actor Other, Pawn EventInstigator )
+{
+	if( Level.TimeSeconds - TriggerTime < ReTriggerDelay )
+	{
+		return;
+	}
+	TriggerTime = Level.TimeSeconds;
+	super.TriggerEvent( EventName, Other, EventInstigator );
 }
 
 // TODO: Sync code practice with GroupTriggerVolume.
@@ -71,5 +86,5 @@ function bool HasAllMembers( int groupIndex, optional out int missingMembers, op
 
 defaultproperties
 {
-	Info="Atleast an amount of (RequiredMembersCount) members of a group(group must also be full) must enter this volume in order to cause the volume to trigger the specified event."
+	Info="At least an amount of @RequiredMembersCount members of a group must enter this volume in order to trigger its event."
 }

@@ -1,6 +1,6 @@
 /*==============================================================================
    TrialGroup
-   Copyright (C) 2010 Eliot Van Uytfanghe
+   Copyright (C) 2010 - 2014 Eliot Van Uytfanghe
 
    This program is free software; you can redistribute and/or modify
    it under the terms of the Open Unreal Mod License version 1.1.
@@ -12,10 +12,27 @@ class GroupTriggerVolume extends PhysicsVolume
 var editconst GroupManager Manager;
 var() protected editconst const noexport string Info;
 
+/**
+ * Amount of group members required for this volume to be considered full.
+ * If set to 0 then @MaxGroupSize will be used instead.
+ */
 var() int RequiredMembersCount;
 
+/** Whether this volume wants any HUD rendering at all. */
+var() bool bDisplayOnHUD;
+
+/** If this and @bDisplayOnHUD is true, the location and distance from the viewer will be rendered on the HUD. */
+var() bool bDisplayTrackingOnHUD;
+
+/** If this and @bDisplayOnHUD is true, the progress will be rendered to any group members. */
+var() bool bDisplayInfoOnHUD;
+
+/** Minimum time before this volume can be triggered again. */
+var() float ReTriggerDelay;
+var float TriggerTime;
+
 // Fallback for outdated maps.
-var deprecated string LastTriggeredByGroupName; 
+var deprecated string LastTriggeredByGroupName;
 
 // Operator from ServerBTimes.u
 static final operator(102) string $( Color B, coerce string A )
@@ -24,7 +41,7 @@ static final operator(102) string $( Color B, coerce string A )
 }
 
 /**
- * Returns a list of all xPawn(Players) that are touching this volume. 
+ * Returns a list of all xPawn(Players) that are touching this volume.
  * #Client: Returns only the touches of local actors such as a player's own pawn but not any others.
  * #Server: Returns any touching xPawn.
  */
@@ -39,7 +56,7 @@ final simulated function GetPlayersInVolume( out array<Pawn> players )
     		continue;
     	}
 		players[players.Length] = Pawn(Touching[i]);
-	}	
+	}
 }
 
 final function FilterPlayersByGroup( int groupIndex, out array<Pawn> members )
@@ -53,7 +70,7 @@ final function FilterPlayersByGroup( int groupIndex, out array<Pawn> members )
 			members.Remove(i, 1);
 			-- i;
 		}
-	}	
+	}
 }
 
 final simulated function int GetRequiredMembersCount( GroupManager groupManager )
@@ -76,10 +93,20 @@ final function bool HasAllRequiredMembers( array<Pawn> foundMembers, out int mis
 	{
 		return true;
 	}
-	return false;	
+	return false;
 }
 
-simulated function RenderVolume( Canvas C, GroupInstance group, PlayerController viewer )
+simulated function bool AllowRendering( GroupInstance group, PlayerController viewer )
+{
+	return bDisplayOnHUD || (!bDisplayInfoOnHUD && !bDisplayTrackingOnHUD);
+}
+
+simulated function bool AllowInfoRendering( GroupInstance group, PlayerController viewer )
+{
+	return bDisplayInfoOnHUD;
+}
+
+simulated function RenderInfo( Canvas C, GroupInstance group, PlayerController viewer )
 {
 	local int membersIn;
 	local array<Pawn> members;
@@ -108,6 +135,21 @@ simulated function RenderVolume( Canvas C, GroupInstance group, PlayerController
 	C.DrawText( s );
 }
 
+simulated function bool AllowTrackingRendering( GroupInstance group, PlayerController viewer )
+{
+	return bDisplayTrackingOnHUD;
+}
+
+simulated function RenderTracking( Canvas C, HUD_Assault hud, GroupInstance group, PlayerController viewer )
+{
+	local Vector screenPos;
+
+	screenPos = C.WorldToScreen( Location );
+	C.DrawColor = group.GroupColor;
+	C.DrawColor.A = 50;
+	hud.DrawActorTracking( C, self, false, screenPos );
+}
+
 event PawnEnteredVolume( Pawn Other )
 {
 	local int i, missingMembersCount, groupIndex;
@@ -121,7 +163,7 @@ event PawnEnteredVolume( Pawn Other )
     groupIndex = Manager.GetGroupIndexByPlayer( Other.Controller );
 	if( groupIndex == -1 )
 	{
-		xPawn(Other).ClientMessage( Class'GroupManager'.Default.GroupColor 
+		xPawn(Other).ClientMessage( Class'GroupManager'.Default.GroupColor
 			$ "Sorry you cannot contribute to this volume because you are not in a group!" );
 		return;
 	}
@@ -131,20 +173,25 @@ event PawnEnteredVolume( Pawn Other )
 	Manager.ClearEmptyGroup( groupIndex );
 	FilterPlayersByGroup( groupIndex, members );
 
-	if( Manager.Groups[groupIndex].Members.Length == Manager.MaxGroupSize 
+	if( Manager.Groups[groupIndex].Members.Length == Manager.MaxGroupSize
 		&& HasAllRequiredMembers( members, missingMembersCount ) )
 	{
+		if( Level.TimeSeconds - TriggerTime < ReTriggerDelay )
+		{
+			return;
+		}
+		TriggerTime = Level.TimeSeconds;
 		TriggerEvent( Event, self, Other );
 	}
 	else
 	{
 		for( i = 0; i < members.Length; ++ i )
 		{
-			Manager.SendPlayerMessage( members[i].Controller, Eval( 
-				missingMembersCount > 1, 
+			Manager.SendPlayerMessage( members[i].Controller, Eval(
+				missingMembersCount > 1,
 				members.Length $ "/" $ GetRequiredMembersCount( Manager ) $ ", " $ missingMembersCount $ " more members required",
 				members.Length $ "/" $ GetRequiredMembersCount( Manager ) $ ", one more member required"
-			));
+			), Manager.GroupProgressMessageClass );
 		}
 	}
 }
@@ -152,4 +199,10 @@ event PawnEnteredVolume( Pawn Other )
 defaultproperties
 {
 	Info="All members of a group(group must also be full) have to enter this volume to trigger its event."
+
+	bDisplayOnHUD=true
+	bDisplayTrackingOnHUD=true
+	bDisplayInfoOnHUD=true
+
+	ReTriggerDelay=0.0
 }
