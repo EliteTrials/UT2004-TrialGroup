@@ -12,6 +12,27 @@ class GroupManager extends Mutator
 	hidecategories(Lighting,LightColor,Karma,Mutator,Force,Collision,Sound)
 	placeable;
 
+/** The required group size a group has to be. */
+var() int MaxGroupSize;
+
+/** The maximum distance a player can be away from its player spawn when using group commands such as JoinGroup. */
+var() float GroupFunctionDistanceLimit;
+
+/** The default group name to be given to wanderers. */
+var() string GeneratedGroupName;
+
+var() private editconst const noexport string Info;
+
+var(Modules) class<GroupLocalMessage>
+	GroupMessageClass, PlayerMessageClass,
+	TaskMessageClass, CounterMessageClass,
+	GroupProgressMessageClass;
+var(Modules) class<GroupInstance> GroupInstanceClass;
+var(Modules) class<GroupInteraction> GroupInteractionClass;
+var(Modules) class<GroupCounter> GroupCounterClass;
+var(Modules) class<GroupRules> GroupRulesClass;
+var(Modules) class<GroupPlayerLinkedReplicationInfo> GroupPlayerReplicationInfoClass;
+
 struct sGroup
 {
 	var string GroupName;
@@ -26,21 +47,6 @@ var editconst noexport array<GroupObjective> Objectives;
 var editconst noexport array<GroupTaskComplete> Tasks, OptionalTasks;
 var editconst const noexport Color GroupColor;
 var private editconst noexport int NextGroupId, CurrentWanderersGroupId;
-
-var(Modules) class<GroupLocalMessage>
-	GroupMessageClass, PlayerMessageClass,
-	TaskMessageClass, CounterMessageClass,
-	GroupProgressMessageClass;
-var(Modules) class<GroupInstance> GroupInstanceClass;
-var(Modules) class<GroupInteraction> GroupInteractionClass;
-var(Modules) class<GroupCounter> GroupCounterClass;
-var(Modules) class<GroupRules> GroupRulesClass;
-var(Modules) class<GroupPlayerLinkedReplicationInfo> GroupPlayerReplicationInfoClass;
-
-var() int MaxGroupSize;
-var() string GeneratedGroupName;
-var() private editconst const noexport string Info;
-
 var editconst int MaxCountDownTicks, MinCountDownTicks;
 
 // Operator from ServerBTimes.u
@@ -249,7 +255,7 @@ final function JoinGroup( PlayerController PC, string groupName )
 		return;
 	}
 
-	if( VSize( PC.Pawn.LastStartSpot.Location - PC.Pawn.Location ) >= 600 )
+	if( VSize( PC.Pawn.LastStartSpot.Location - PC.Pawn.Location ) >= GroupFunctionDistanceLimit )
 	{
 		PC.ClientMessage( GroupColor $ "Sorry you can only join a group when you are near your spawn location" );
 		return;
@@ -482,7 +488,7 @@ final function bool LeaveGroup( PlayerController PC, optional bool bNoMessages )
 		return false;
 	}
 
-	if( VSize( PC.Pawn.LastStartSpot.Location - PC.Pawn.Location ) >= 600 )
+	if( VSize( PC.Pawn.LastStartSpot.Location - PC.Pawn.Location ) >= GroupFunctionDistanceLimit )
 	{
 		if( !bNoMessages )
 		{
@@ -625,6 +631,34 @@ final function GetMembersByGroupIndex( int groupIndex, out array<Controller> mem
 	if( groupIndex != -1 && Groups.Length > 0 )
 	{
 		members = Groups[groupIndex].Members;
+	}
+}
+
+final function GroupPlaySound( int groupIndex, Sound sound )
+{
+	local int m;
+	local Controller C;
+
+	for( m = 0; m < Groups[groupIndex].Members.Length; ++ m )
+	{
+		if( Groups[groupIndex].Members[m] != None )
+		{
+			PlayerController(Groups[groupIndex].Members[m]).ClientPlaySound( sound,,, SLOT_Talk );
+			// Check all controllers whether they are spectating this member!
+			for( C = Level.ControllerList; C != None; C = C.NextController )
+			{
+				// Hey not to myself(incase)
+				if( C == Groups[groupIndex].Members[m] || PlayerController(C) == none )
+				{
+					continue;
+				}
+
+				if( PlayerController(C).RealViewTarget == Groups[groupIndex].Members[m] )
+				{
+					PlayerController(C).ClientPlaySound( sound,,, SLOT_Talk );
+				}
+			}
+		}
 	}
 }
 
@@ -857,7 +891,7 @@ function Reset()
 	}
 }
 
-final static Function GroupPlayerLinkedReplicationInfo GetGroupPlayerReplicationInfo( PlayerReplicationInfo PRI )
+final static function GroupPlayerLinkedReplicationInfo GetGroupPlayerReplicationInfo( PlayerReplicationInfo PRI )
 {
 	local LinkedReplicationInfo LRI;
 
@@ -900,6 +934,8 @@ defaultproperties
     Description="Provides functionality for mappers to integrate a group system which an external mutator is suposed to support for actually usage"
 
 	MaxGroupSize=2
+	GeneratedGroupName="Explorers"
+	GroupFunctionDistanceLimit=600
 	MaxCountDownTicks=3
 	MinCountDownTicks=1
 
@@ -921,6 +957,4 @@ defaultproperties
 	GroupPlayerReplicationInfoClass=class'GroupPlayerLinkedReplicationInfo'
 	CounterMessageClass=class'GroupCounterLocalMessage'
 	GroupProgressMessageClass=class'GroupProgressLocalMessage'
-
-	GeneratedGroupName="Explorers"
 }
