@@ -3,6 +3,8 @@
 //==============================================================================
 class GroupTeleportVolume extends LCA_TeleportVolume;
 
+var() localized string lzTeleportMessage;
+
 simulated event PostTouch( Actor Other )
 {
 	local Teleporter TP;
@@ -50,6 +52,9 @@ simulated event PostTouch( Actor Other )
 				}
 			}
 		}
+
+		// lzTeleportMessage = "%o triggered a group teleport"
+		GM.GroupSendMessage( groupindex, Repl(lzTeleportMessage, "%o", Pawn(Other).Controller.GetHumanReadableName()) );
 	}
 }
 
@@ -64,4 +69,9 @@ simulated function GroupManager GetGM()
 		}
 	}
 	return none;
+}
+
+defaultproperties
+{
+	lzTeleportMessage="%o triggered a group teleport"
 }
