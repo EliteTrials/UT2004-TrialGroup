@@ -1,6 +1,6 @@
 /*==============================================================================
    TrialGroup
-   Copyright (C) 2010 Eliot Van Uytfanghe
+   Copyright (C) 2010 - 2014 Eliot Van Uytfanghe
 
    This program is free software; you can redistribute and/or modify
    it under the terms of the Open Unreal Mod License version 1.1.
@@ -9,6 +9,7 @@ class GroupInteraction extends Interaction;
 
 var private editconst noexport bool bMenuModified;
 var private editconst noexport float LastCmdTime;
+const ASHUD = class'HUD_Assault';
 
 event NotifyLevelChange()
 {
@@ -98,45 +99,61 @@ function PostRender( Canvas C )
 {
 	local GroupPlayerLinkedReplicationInfo LRI, myLRI;
 	local HUD hud;
-	local vector av;
-	// local vector bv;
+	local HUD_Assault gamehud;
+	local Vector av;
 	local float dist, xl, yl;
-	// local float x, y;
 	local string s;
-	local PlayerController target;
+	local Actor target;
 	local Pawn pawn;
-	// local Pawn b;
-	local vector camLoc, dir, aX, aY, aZ;
-	local rotator camRot;
 	local GroupInstance group;
-	local bool bIsMemberOfMyGroup, bIsInSight;
+	local bool bIsMemberOfMyGroup;
+	local byte bIsInSight;
+	local GroupTriggerVolume volume;
+	local GroupInstance myGroup;
 
 	if( ViewportOwner.Actor.myHUD.bShowScoreBoard || ViewportOwner.Actor.myHUD.bHideHUD || ViewportOwner.Actor.PlayerReplicationInfo == None )
 		return;
 
-	// C.SetPos( 600, 0 );
-	// C.DrawText( ViewportOwner.Actor.ViewTarget @ ViewportOwner.Actor.RealViewTarget );
-	if( Pawn(ViewportOwner.Actor.ViewTarget) != none )
+	target = ViewportOwner.Actor.ViewTarget;
+	if( xPawn(target) != none )
 	{
-		target = PlayerController(Pawn(ViewportOwner.Actor.ViewTarget).Controller);
+		myLRI = class'GroupManager'.static.GetGroupPlayerReplicationInfo( xPawn(target).PlayerReplicationInfo );
 	}
-	else
+	else if( xPlayer(target) != none )
 	{
-		target = ViewportOwner.Actor;
+		myLRI = class'GroupManager'.static.GetGroupPlayerReplicationInfo( xPlayer(target).PlayerReplicationInfo );
 	}
-
-	if( target == none )
+	if( myLRI == none || target == none )
 	{
 		return;
 	}
-
-	myLRI = class'GroupManager'.static.GetGroupPlayerReplicationInfo( target );
-	if( myLRI == none )
-	{
-		return;
-	}
+	myGroup = myLRI.PlayerGroup;
 
 	hud = ViewportOwner.Actor.myHUD;
+	gamehud = HUD_Assault(hud);
+	if( myGroup != none )
+	{
+		foreach target.Region.Zone.ZoneActors( class'GroupTriggerVolume', volume )
+		{
+			if( !volume.AllowRendering( myGroup, ViewportOwner.Actor ) )
+			{
+				continue;
+			}
+
+			if( volume.AllowInfoRendering( myGroup, ViewportOwner.Actor ) && IsTargetInView( C, target, volume.Location, ViewportOwner.Actor.TeamBeaconMaxDist, bIsInSight, dist ) && bIsInSight == 1
+				)
+			{
+				volume.RenderInfo( C, myGroup, ViewportOwner.Actor );
+				continue;
+			}
+
+			if( dist <= ViewportOwner.Actor.TeamBeaconMaxDist && volume.AllowTrackingRendering( myGroup, ViewportOwner.Actor ) )
+			{
+				volume.RenderTracking( C, gamehud, myGroup, ViewportOwner.Actor );
+			}
+		}
+	}
+
 	foreach target.DynamicActors( class'GroupInstance', group )
 	{
 		for( LRI = group.Commander; LRI != none; LRI = LRI.NextMember )
@@ -152,31 +169,20 @@ function PostRender( Canvas C )
 				continue;
 			}
 
-			C.GetCameraLocation( camLoc, camRot );
-			dir = pawn.Location - camLoc;
-			dist = VSize( dir );
-			if( dist > target.TeamBeaconMaxDist )
+			if( !IsTargetInView( C, target, pawn.Location, ViewportOwner.Actor.TeamBeaconMaxDist, bIsInSight, dist ) )
 			{
 				continue;
 			}
 
-			GetAxes( target.Rotation, aX, aY, aZ );
-			dir /= dist;
-			if( !((dir dot aX) > 0.6) )
-			{
-				continue;
-			}
-
-			bIsInSight = target.FastTrace( pawn.Location, camLoc );
-			bIsMemberOfMyGroup = group == myLRI.PlayerGroup;
+			bIsMemberOfMyGroup = group == myGroup;
 			av = C.WorldToScreen( pawn.Location );
 			C.DrawColor = LRI.PlayerGroup.GroupColor;
 			if( bIsMemberOfMyGroup )
-			{						
-				s = Eval( bIsInSight, LRI.PlayerGroup.GroupName, pawn.PlayerReplicationInfo.PlayerName );
-				if( bIsInSight )
+			{
+				s = Eval( bIsInSight == 1, LRI.PlayerGroup.GroupName, pawn.PlayerReplicationInfo.PlayerName );
+				if( bIsInSight == 1 )
 				{
-					C.DrawColor.A = 130;			
+					C.DrawColor.A = 130;
 				}
 				else
 				{
@@ -189,10 +195,10 @@ function PostRender( Canvas C )
 				C.DrawColor.A = 90;
 			}
 
-			class'HUD_Assault'.static.Draw_2DCollisionBox( C, pawn, av, s, pawn.DrawScale, true );
-			if( bIsMemberOfMyGroup && !bIsInSight && dist < target.TeamBeaconPlayerInfoMaxDist )
+			ASHUD.static.Draw_2DCollisionBox( C, pawn, av, s, pawn.DrawScale, true );
+			if( bIsMemberOfMyGroup && bIsInSight == 0 && dist < ViewportOwner.Actor.TeamBeaconPlayerInfoMaxDist )
 			{
-				s = dist/128 $ "m";
+				s = ASHUD.default.IP_Bracket_Open $ int(dist/128) $ ASHUD.default.MetersString $ ASHUD.default.IP_Bracket_Close;
 				C.TextSize( s, xl, yl );
 				C.SetPos( av.x - xl*0.5, av.y );
 				C.DrawColor.A = 150;
@@ -200,6 +206,29 @@ function PostRender( Canvas C )
 			}
 		}
 	}
+}
+
+final static function bool IsTargetInView( Canvas C, Actor viewer, Vector targetlocation, float maxDistance, optional out byte bIsVisible, optional out float distance )
+{
+	local Rotator camRot;
+	local Vector camLoc, dir, x, y, z;
+
+	C.GetCameraLocation( camLoc, camRot );
+	dir = targetlocation - camLoc;
+	distance = VSize( dir );
+	if( distance > maxDistance )
+	{
+		return false;
+	}
+
+	GetAxes( viewer.Rotation, x, y, z );
+	if( (dir/distance) dot x <= 0.6 )
+	{
+		return false;
+	}
+
+	bIsVisible = byte(viewer.FastTrace( targetlocation, camLoc ));
+	return true;
 }
 
 defaultproperties

@@ -10,6 +10,7 @@ class GroupPlayerLinkedReplicationInfo extends LinkedReplicationInfo;
 var bool bIsWanderer;
 var string ClientMessage;
 
+var int PlayerGroupId;
 var GroupInstance PlayerGroup;
 var Pawn Pawn;
 var GroupPlayerLinkedReplicationInfo NextMember;
@@ -19,8 +20,8 @@ replication
 	reliable if( Role == ROLE_Authority )
 		ClientSendMessage;
 
-	reliable if( bNetDirty )
-		PlayerGroup, NextMember, Pawn;
+	reliable if( Role == ROLE_Authority )
+		PlayerGroupId, PlayerGroup, NextMember, Pawn;
 }
 
 simulated event PostNetBeginPlay()
@@ -61,4 +62,9 @@ event Timer()
 defaultproperties
 {
 	bIsWanderer=true
+
+	// Overkill, but neccessary to replicate property @Base -- Deprecated, use @PlayerGroupId instead to help clients to scan the map for the correct instance.
+	//bSkipActorPropertyReplication=false
+	//bReplicateMovement=true
+	PlayerGroupId=-1
 }

@@ -44,6 +44,7 @@ static function string GetString( optional int Switch,
 
 defaultproperties
 {
+	DrawColor=(R=182,G=89,B=73,A=255)
 	bIsConsoleMessage=false
 	bFadeMessage=true
 	// bComplexString=true

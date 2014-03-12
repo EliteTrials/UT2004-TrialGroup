@@ -24,7 +24,7 @@ replication
 		Commander;
 
 	reliable if( bNetInitial )
-		GroupName, GroupColor;
+		GroupId, GroupName, GroupColor, Manager;
 }
 
 event PreBeginPlay()
@@ -35,6 +35,20 @@ event PreBeginPlay()
 	GroupColor.R = Rand( 255 );
 	GroupColor.G = Rand( 255 );
 	GroupColor.B = Rand( 255 );
+}
+
+final simulated function bool IsMember( Pawn pawn )
+{
+	local GroupPlayerLinkedReplicationInfo LRI;
+
+	for( LRI = Commander; LRI != none; LRI = LRI.NextMember )
+	{
+		if( LRI.Pawn == pawn )
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 final function bool IsRelevantToGroup( /**xPawn*/Actor target )

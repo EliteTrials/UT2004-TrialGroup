@@ -1,6 +1,6 @@
 /*==============================================================================
    TrialGroup
-   Copyright (C) 2010 Eliot Van Uytfanghe
+   Copyright (C) 2010 - 2014 Eliot Van Uytfanghe
 
    This program is free software; you can redistribute and/or modify
    it under the terms of the Open Unreal Mod License version 1.1.
@@ -8,8 +8,18 @@
 class GroupTaskComplete extends GroupTrigger
 	placeable;
 
-var() const string TaskName;
+#exec obj load file="../Sounds/Stock/GameSounds.uax";
+
+/** The name of this task, this property was used to identify whether a group had completed it already. But now it's only part of a message. */
+var() localized string TaskName;
+
+/** A broadcasted message to the instigator's group for when this task is completed. */
+var() localized string TaskMessage;
+
+/** Determines whether this is an optional task. Optional tasks don't have to be completed by a group to finish the map. */
 var() const bool bOptionalTask;
+
+/** The higher, the more points that will be awarded to every group's members. */
 var() const enum EOptionalTaskReward
 {
 	OTR_One,
@@ -18,27 +28,39 @@ var() const enum EOptionalTaskReward
 	OTR_Four,
 	OTR_Five
 } OptionalTaskReward;
-var() private editconst const noexport string Info;
-var() private const name EventWhenNoGroup;
-var() private const name EventWhenInitialTaskComplete;
-var() private const name EventWhenAlreadyComplete;
+
+/** Sound to broadcast to all members when the task gets completed. */
+var() Sound CompletedAnnouncement;
+
+/** The event to instigate if instigator has no group. */
+var(Events) private const name EventWhenNoGroup;
+
+/** The event to instigate when the task is completed for the first time (on a group basis). */
+var(Events) private const name EventWhenInitialTaskComplete;
+
+/** The event to instigate when the task was already completed. */
+var(Events) private const name EventWhenAlreadyComplete;
+
+/** The complete message to broadcast to the instigator's group members. */
+var() localized string lzCompleteMessage;
 
 function Trigger( Actor Other, Pawn Instigator )
 {
-	local int i, groupindex;
-	local string optionalmsg;
+	local int i, groupIndex;
+	local string s;
 
 	if( Instigator == None || Instigator.Controller == None )
 	{
+		Warn( "A group task was triggered without an instigator!" );
 		return;
 	}
 
-	groupindex = Manager.GetGroupIndexByPlayer( Instigator.Controller );
-	if( groupindex != -1 )
+	groupIndex = Manager.GetGroupIndexByPlayer( Instigator.Controller );
+	if( groupIndex != -1 )
 	{
-		for( i = 0; i < Manager.Groups[groupindex].CompletedTasks.Length; ++ i )
+		for( i = 0; i < Manager.Groups[groupIndex].CompletedTasks.Length; ++ i )
 		{
-			if( Manager.Groups[groupindex].CompletedTasks[i].TaskName == TaskName )
+			if( Manager.Groups[groupIndex].CompletedTasks[i] == self )
 			{
 				// Already completed!
 				if( EventWhenAlreadyComplete != '' )
@@ -49,20 +71,23 @@ function Trigger( Actor Other, Pawn Instigator )
 			}
 		}
 
-		Manager.Groups[groupindex].CompletedTasks[Manager.Groups[groupindex].CompletedTasks.Length] = self;
-		if( Manager.OptionalTasks.Length > 0 )
+		Manager.Groups[groupIndex].CompletedTasks[Manager.Groups[groupIndex].CompletedTasks.Length] = self;
+		s = Repl(Repl(Repl(lzCompleteMessage, "%name%", Taskname), "%n", Manager.GetGroupCompletedTasks( groupIndex, False )), "%c", Manager.Tasks.Length);
+		Manager.GroupSendMessage( groupIndex, s, Manager.TaskMessageClass );
+		Manager.GroupPlaySound( groupIndex, CompletedAnnouncement );
+
+		if( TaskMessage != "" )
 		{
-			optionalmsg = "(" $ Manager.GetGroupCompletedTasks( groupindex, True ) $ "/" $ Manager.OptionalTasks.Length $ ")";
+			Manager.GroupSendMessage( groupIndex, TaskMessage );
 		}
-		Manager.GroupSendMessage( groupindex, TaskName @ "(" $ Manager.GetGroupCompletedTasks( groupindex, False ) $ "/" $ Manager.Tasks.Length $ ")" @ optionalmsg @ "completed!", Manager.TaskMessageClass );
 
 		if( bOptionalTask )
 		{
-			Manager.RewardGroup( groupindex, OptionalTaskReward + 1 );
+			Manager.RewardGroup( groupIndex, OptionalTaskReward + 1 );
 		}
 		else
 		{
-			Manager.RewardGroup( groupindex, 1 );
+			Manager.RewardGroup( groupIndex, 1 );
 		}
 
 		if( EventWhenInitialTaskComplete != '' )
@@ -82,8 +107,10 @@ function Trigger( Actor Other, Pawn Instigator )
 
 defaultproperties
 {
-	TaskName="e.g. ShieldGun Sync (1)"
-	bOptionalTask=False
+	lzCompleteMessage="%name% (%n/%c tasks completed!)"
+	TaskName="Escape The Caves"
+	TaskMessage=""
+	bOptionalTask=false
 	OptionalTaskReward=OTR_Two
-	Info="Input a unique taskname for each GroupTaskComplete trigger!", NOT-YET-COMPLETE"
+	CompletedAnnouncement=GameSounds.DDAverted
 }
