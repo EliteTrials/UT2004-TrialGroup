@@ -12,6 +12,8 @@ class GroupTriggerVolume extends PhysicsVolume
 var editconst GroupManager Manager;
 var() protected editconst const noexport string Info;
 
+var() localized string lzPlayersMissing, lzPlayerMissing;
+
 /**
  * Amount of group members required for this volume to be considered full.
  * If set to 0 then @MaxGroupSize will be used instead.
@@ -27,12 +29,37 @@ var() bool bDisplayTrackingOnHUD;
 /** If this and @bDisplayOnHUD is true, the progress will be rendered to any group members. */
 var() bool bDisplayInfoOnHUD;
 
+/** Does this volume trigger a group task?, only used if @bDisplayInfoOnHUD is true. */
+var() bool bTriggersGroupTask;
+
 /** Minimum time before this volume can be triggered again. */
 var() float ReTriggerDelay;
 var float TriggerTime;
 
 // Fallback for outdated maps.
 var deprecated string LastTriggeredByGroupName;
+
+// replication
+// {
+// 	reliable if( Role == ROLE_Authority && bNetInitial )
+// 		bTriggersGroupTask;
+// }
+
+// event PostBeginPlay()
+// {
+// 	local GroupTaskComplete task;
+
+// 	super.PostBeginPlay();
+
+// 	if( bDisplayInfoOnHUD && bDisplayOnHUD && !bTriggersGroupTask )
+// 	{
+// 		foreach DynamicActors( class'GroupTaskComplete', task, Event )
+// 		{
+// 			bTriggersGroupTask = true;
+// 			break;
+// 		}
+// 	}
+// }
 
 // Operator from ServerBTimes.u
 static final operator(102) string $( Color B, coerce string A )
@@ -85,11 +112,11 @@ final simulated function int GetMissingMembersCount( int membersCount, GroupMana
 	return GetRequiredMembersCount( groupManager ) - membersCount;
 }
 
-final function bool HasAllRequiredMembers( array<Pawn> foundMembers, out int missingCount )
+final function bool HasAllRequiredMembers( array<Pawn> members, out int missingCount )
 {
-	missingCount = GetMissingMembersCount( foundMembers.Length, Manager );
+	missingCount = GetMissingMembersCount( members.Length, Manager );
 	// The group is full and all of them are in the volume!, then triggerevent...
-	if( foundMembers.Length >= GetRequiredMembersCount( Manager ) && missingCount <= 0 )
+	if( members.Length >= GetRequiredMembersCount( Manager ) && missingCount <= 0 )
 	{
 		return true;
 	}
@@ -132,7 +159,22 @@ simulated function RenderInfo( Canvas C, GroupInstance group, PlayerController v
 	C.StrLen( s, xl, yl );
 	C.SetPos( screenPos.X - xl*0.5, screenPos.Y - yl*0.5 );
 	C.DrawColor = group.GroupColor;
-	C.DrawText( s );
+	C.DrawTextClipped( s );
+
+	if( bTriggersGroupTask )
+	{
+		RenderTask( C, xl, yl );
+	}
+}
+
+simulated function RenderTask( Canvas C, float xl, float yl )
+{
+	local float	iconSize;
+
+	iconSize = yl*2;
+	C.SetPos( C.CurX - iconSize - yl*0.33, C.CurY + yl*0.5 - iconSize*0.5 );
+	C.DrawColor = class'HUD'.default.WhiteColor;
+	C.DrawTile( Texture'AS_FX_TX.Icons.ScoreBoard_Objective_Final', iconSize, iconSize, 0, 0, 128, 128 );
 }
 
 simulated function bool AllowTrackingRendering( GroupInstance group, PlayerController viewer )
@@ -150,20 +192,20 @@ simulated function RenderTracking( Canvas C, HUD_Assault hud, GroupInstance grou
 	hud.DrawActorTracking( C, self, false, screenPos );
 }
 
-event PawnEnteredVolume( Pawn Other )
+event PawnEnteredVolume( Pawn other )
 {
-	local int i, missingMembersCount, groupIndex;
+	local int missingMembersCount, groupIndex;
 	local array<Pawn> members;
 
-	if( xPawn(Other) == none || Other.Controller == none )
+	if( xPawn(other) == none || !other.IsPlayerPawn() )
 	{
 		return;
 	}
 
-    groupIndex = Manager.GetGroupIndexByPlayer( Other.Controller );
+    groupIndex = Manager.GetGroupIndexByPlayer( other.Controller );
 	if( groupIndex == -1 )
 	{
-		xPawn(Other).ClientMessage( Class'GroupManager'.Default.GroupColor
+		xPawn(other).ClientMessage( Class'GroupManager'.Default.GroupColor
 			$ "Sorry you cannot contribute to this volume because you are not in a group!" );
 		return;
 	}
@@ -181,18 +223,29 @@ event PawnEnteredVolume( Pawn Other )
 			return;
 		}
 		TriggerTime = Level.TimeSeconds;
-		TriggerEvent( Event, self, Other );
+		TriggerEvent( Event, self, other );
 	}
 	else
 	{
-		for( i = 0; i < members.Length; ++ i )
-		{
-			Manager.SendPlayerMessage( members[i].Controller, Eval(
+		NotifyMembersMissing( members, missingMembersCount );
+	}
+}
+
+function NotifyMembersMissing( array<Pawn> members, int missingMembersCount )
+{
+	local int i;
+
+	for( i = 0; i < members.Length; ++ i )
+	{
+		Manager.SendPlayerMessage(
+			members[i].Controller,
+			Eval(
 				missingMembersCount > 1,
-				members.Length $ "/" $ GetRequiredMembersCount( Manager ) $ ", " $ missingMembersCount $ " more members required",
-				members.Length $ "/" $ GetRequiredMembersCount( Manager ) $ ", one more member required"
-			), Manager.GroupProgressMessageClass );
-		}
+				Repl(Repl(Repl(lzPlayersMissing, "%a", members.Length), "%b", GetRequiredMembersCount( Manager )), "%n", missingMembersCount),
+				Repl(Repl(lzPlayerMissing, "%a", members.Length), "%b", GetRequiredMembersCount( Manager ))
+			),
+			Manager.GroupProgressMessageClass
+		);
 	}
 }
 
@@ -203,6 +256,10 @@ defaultproperties
 	bDisplayOnHUD=true
 	bDisplayTrackingOnHUD=true
 	bDisplayInfoOnHUD=true
+	bTriggersGroupTask=false
 
 	ReTriggerDelay=0.0
+
+	lzPlayersMissing="%a/%b, %n more members are required"
+	lzPlayerMissing="%a/%b, one more member is required"
 }

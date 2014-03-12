@@ -18,28 +18,28 @@ var GroupMultiVolumesManager LinkManager;
  */
 var(Events) name EventWhenFilledButNotAll;
 
-event PawnEnteredVolume( Pawn Other )
+event PawnEnteredVolume( Pawn other )
 {
-	local int groupindex;
+	local int groupIndex;
 
-	if( xPawn(Other) == none || Other.Controller == none )
+	if( xPawn(other) == none || !other.IsPlayerPawn() )
 	{
 		return;
 	}
 
-    groupindex = Manager.GetGroupIndexByPlayer( Other.Controller );
-	if( groupindex != -1 )
+    groupIndex = Manager.GetGroupIndexByPlayer( other.Controller );
+	if( groupIndex != -1 )
 	{
-		// Because we are comparing by members length to find out whether the group is fulll, it is important to clear all None references.
-    	Manager.ClearEmptyGroup( groupindex );
+		// Because we are comparing by members length to find out whether the group is full, it's important to clear all None references.
+    	Manager.ClearEmptyGroup( groupIndex );
     	if( LinkManager != none )
     	{
-    		LinkManager.LinkEntered( self, groupIndex, Other );
+    		LinkManager.LinkEntered( self, groupIndex, other );
     	}
 	}
 	else
 	{
-		xPawn(Other).ClientMessage( class'GroupManager'.default.GroupColor $ "Sorry you cannot contribute to this volume because you are not in a group!" );
+		xPawn(other).ClientMessage( class'GroupManager'.default.GroupColor $ "Sorry you cannot contribute to this volume because you are not in a group!" );
 	}
 }
 
@@ -55,33 +55,15 @@ simulated event TriggerEvent( Name EventName, Actor Other, Pawn EventInstigator 
 
 // TODO: Sync code practice with GroupTriggerVolume.
 /** Check if a partition of groupIndex is in touch with this volume. */
-function bool HasAllMembers( int groupIndex, optional out int missingMembers, optional out array<Controller> foundMembers )
+function bool HasAllMembers( int groupIndex, optional out int missingMembers, optional out array<Pawn> members )
 {
-	local array<Controller> members;
-	local int i;
-
-	// First build up a list of all touching players.
-	for( i = 0; i < Touching.Length; ++ i )
-	{
-    	if( xPawn(Touching[i]) != none )
-    	{
-    		members[members.Length] = xPawn(Touching[i]).Controller;
-    	}
-	}
-
-	// Check the touching players list for members of groupIndex, and add to foundMembers.
-	for( i = 0; i < members.Length; ++ i )
-	{
-		if( Manager.GetMemberIndexByGroupIndex( members[i], groupIndex ) != -1 )
-		{
-			foundMembers[foundMembers.Length] = members[i];
-		}
-	}
+	GetPlayersInVolume( members );
+	FilterPlayersByGroup( groupIndex, members );
 
 	// Calc how many members aren't found.
-	missingMembers = (RequiredMembersCount - Min( foundMembers.Length, RequiredMembersCount ));
+	missingMembers = (RequiredMembersCount - Min( members.Length, RequiredMembersCount ));
 	// Return True if we found more members than need and that the group is indeed at it capacity.
-	return (foundMembers.Length >= RequiredMembersCount && Manager.Groups[groupIndex].Members.Length == Manager.MaxGroupSize);
+	return (members.Length >= RequiredMembersCount && Manager.Groups[groupIndex].Members.Length == Manager.MaxGroupSize);
 }
 
 defaultproperties

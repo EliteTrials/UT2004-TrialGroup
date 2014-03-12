@@ -10,9 +10,8 @@ class GroupMultiVolumesManager extends Info
 
 var() edfindable array<edfindable GroupMultiTriggerVolume> Links;
 
-var() localized const string lzLinksNeed;
-var() localized const string lzPlayersMissing;
-var() localized const string lzPartition;
+var() localized string lzLinksNeed, lzLinkNeed;
+var() localized string lzPartition;
 
 // Operator from ServerBTimes.u
 static final operator(102) string $( Color B, coerce string A )
@@ -34,10 +33,10 @@ event PreBeginPlay()
 // TODO: Sync code practice with GroupTriggerVolume.
 function bool LinkEntered( GroupMultiTriggerVolume V, int groupIndex, Pawn Other )
 {
-	local int i, missingmembers, filledlinks;
-	local array<Controller> foundmembers;
+	local int i, missingCount, filledlinks;
+	local array<Pawn> members;
 
-	if( V.HasAllMembers( groupindex, missingmembers, foundmembers ) )
+	if( V.HasAllMembers( groupindex, missingCount, members ) )
 	{
 		++ filledlinks;
 		for( i = 0; i < Links.Length; ++ i )
@@ -51,35 +50,33 @@ function bool LinkEntered( GroupMultiTriggerVolume V, int groupIndex, Pawn Other
 		if( filledlinks == Links.Length )
 		{
             // v.Manager.GroupSendMessage( groupindex, "All links successfully exceeded!" );
-			TriggerEvent( event, self, Other );
+			TriggerEvent( Event, self, Other );
 			for( i = 0; i < Links.Length; ++ i )
 			{
 				// We call TriggerEvent from Links[i] incase of overriden behavior.
-				Links[i].TriggerEvent( Links[i].event, Links[i], Other );
+				Links[i].TriggerEvent( Links[i].Event, Links[i], Other );
 			}
 		}
 		else
 		{
-            v.Manager.GroupSendMessage( groupindex, Repl( lzLinksNeed, "%MISSINGLINKS%", Links.Length - filledlinks ), v.Manager.GroupProgressMessageClass );
+			missingCount = Links.Length - filledlinks;
+            v.Manager.GroupSendMessage( groupindex,
+            	Eval( missingCount > 1,
+            		Repl( lzLinksNeed, "%MISSINGLINKS%", missingCount ),
+            		lzLinkNeed
+            	),
+            	v.Manager.GroupProgressMessageClass
+        	);
             TriggerEvent( v.EventWhenFilledButNotAll, v, Other );
 		}
 		return true;
 	}
 	else
 	{
-		// Let the group/member know what happened...
-		for( i = 0; i < foundmembers.Length; ++ i )
+		v.NotifyMembersMissing( members, missingCount );
+		if( missingCount == 0 )
 		{
-			v.Manager.SendPlayerMessage( foundmembers[i], Eval(
-				missingmembers > 1,
-				foundmembers.Length $ "/" $ v.GetRequiredMembersCount( v.Manager ) $ ", " $ missingmembers $ " more members required",
-				foundmembers.Length $ "/" $ v.GetRequiredMembersCount( v.Manager ) $ ", one more member required"
-			), v.Manager.GroupProgressMessageClass );
-		}
-
-		if( missingmembers == 0 )
-		{
-        	v.Manager.GroupSendMessage( groupindex, Repl(lzPartition, "%n", missingmembers), v.Manager.GroupProgressMessageClass );
+        	v.Manager.GroupSendMessage( groupindex, Repl(lzPartition, "%n", missingCount), v.Manager.GroupProgressMessageClass );
 		}
 	}
 	return false;
@@ -88,5 +85,6 @@ function bool LinkEntered( GroupMultiTriggerVolume V, int groupIndex, Pawn Other
 defaultproperties
 {
 	lzLinksNeed="%MISSINGLINKS% more links need to be filled!"
-	lzPartition="Another partition is in need of %n more people!"
+	lzLinkNeed="One more link needs to be filled!"
+	lzPartition="Another partition is in need of %n more members!"
 }
