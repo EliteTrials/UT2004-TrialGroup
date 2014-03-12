@@ -192,6 +192,8 @@ function ModifyPlayer( Pawn other )
 		return;
 	}
 
+	other.bAlwaysRelevant = true;
+
 	LRI = GetGroupPlayerReplicationInfo( other.Controller.PlayerReplicationInfo );
 	if( LRI != none )
 	{
