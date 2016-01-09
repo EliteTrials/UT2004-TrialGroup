@@ -8,7 +8,7 @@
 class GroupTaskComplete extends GroupTrigger
 	placeable;
 
-#exec obj load file="../Sounds/Stock/GameSounds.uax";
+#exec obj load file="GameSounds.uax";
 
 /** The name of this task, this property was used to identify whether a group had completed it already. But now it's only part of a message. */
 var() localized string TaskName;
@@ -49,7 +49,7 @@ function Trigger( Actor Other, Pawn Instigator )
 	local int i, groupIndex;
 	local string s;
 
-	if( Instigator == None || Instigator.Controller == None )
+	if( Instigator == none || Instigator.Controller == none )
 	{
 		Warn( "A group task was triggered without an instigator!" );
 		return;
@@ -65,14 +65,14 @@ function Trigger( Actor Other, Pawn Instigator )
 				// Already completed!
 				if( EventWhenAlreadyComplete != '' )
 				{
-					TriggerEvent( EventWhenAlreadyComplete, Self, Instigator );
+					TriggerEvent( EventWhenAlreadyComplete, self, Instigator );
 				}
 				return;
 			}
 		}
 
 		Manager.Groups[groupIndex].CompletedTasks[Manager.Groups[groupIndex].CompletedTasks.Length] = self;
-		s = Repl(Repl(Repl(lzCompleteMessage, "%name%", Taskname), "%n", Manager.GetGroupCompletedTasks( groupIndex, False )), "%c", Manager.Tasks.Length);
+		s = Repl(Repl(Repl(lzCompleteMessage, "%name%", Taskname), "%n", Manager.GetGroupCompletedTasks( groupIndex, false )), "%c", Manager.Tasks.Length);
 		Manager.GroupSendMessage( groupIndex, s, Manager.TaskMessageClass );
 		Manager.GroupPlaySound( groupIndex, CompletedAnnouncement );
 
@@ -92,14 +92,14 @@ function Trigger( Actor Other, Pawn Instigator )
 
 		if( EventWhenInitialTaskComplete != '' )
 		{
-			TriggerEvent( EventWhenInitialTaskComplete, Self, Instigator );
+			TriggerEvent( EventWhenInitialTaskComplete, self, Instigator );
 		}
 	}
 	else
 	{
 		if( EventWhenNoGroup != '' )
 		{
-			TriggerEvent( EventWhenNoGroup, Self, Instigator );
+			TriggerEvent( EventWhenNoGroup, self, Instigator );
 		}
 	}
 	// else no group

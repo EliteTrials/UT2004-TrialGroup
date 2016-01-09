@@ -8,25 +8,25 @@
 class GroupEventTrigger extends GroupTrigger
 	placeable;
 
-function Trigger( Actor Other, Pawn Instigator )
+function Trigger( Actor other, Pawn instigator )
 {
-	local int m, groupindex;
+	local int m, groupIndex;
 
-	if( Instigator == None || Instigator.Controller == None )
+	if( instigator == none || instigator.Controller == none )
 	{
 		return;
 	}
 
-	groupindex = Manager.GetGroupIndexByPlayer( Instigator.Controller );
-	if( groupindex != -1 )
+	groupIndex = Manager.GetGroupIndexByPlayer( instigator.Controller );
+	if( groupIndex != -1 )
 	{
 		// Get all members to trigger the specified event so that all can be effected by the ...
 		// Can fail if the trigger has a delay.
-		for( m = 0; m < Manager.Groups[groupindex].Members.Length; ++ m )
+		for( m = 0; m < Manager.Groups[groupIndex].Members.Length; ++ m )
 		{
-			if( Manager.Groups[groupindex].Members[m].Pawn != None )
+			if( Manager.Groups[groupIndex].Members[m].Pawn != none )
 			{
-				TriggerEvent( Event, self, Manager.Groups[groupindex].Members[m].Pawn );
+				TriggerEvent( Event, self, Manager.Groups[groupIndex].Members[m].Pawn );
 			}
 		}
 	}

@@ -10,16 +10,16 @@ class GroupMessageTrigger extends GroupTrigger
 
 var() private const string GroupMessage;
 
-function Trigger( Actor Other, Pawn Instigator )
+function Trigger( Actor other, Pawn instigator )
 {
 	local int groupindex;
 
-	if( Instigator == None || Instigator.Controller == None )
+	if( instigator == none || instigator.Controller == none )
 	{
 		return;
 	}
 
-	groupindex = Manager.GetGroupIndexByPlayer( Instigator.Controller );
+	groupindex = Manager.GetGroupIndexByPlayer( instigator.Controller );
 	if( groupindex != -1 )
 	{
 		Manager.GroupSendMessage( groupindex, Repl( GroupMessage, "%GROUPNAME%", "\"" $ Manager.Groups[groupindex].GroupName $ "\"" ) );

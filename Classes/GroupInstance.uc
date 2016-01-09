@@ -37,13 +37,13 @@ event PreBeginPlay()
 	GroupColor.B = Rand( 255 );
 }
 
-final simulated function bool IsMember( Pawn pawn )
+final simulated function bool IsMember( Pawn other )
 {
 	local GroupPlayerLinkedReplicationInfo LRI;
 
 	for( LRI = Commander; LRI != none; LRI = LRI.NextMember )
 	{
-		if( LRI.Pawn == pawn )
+		if( LRI.Pawn == other )
 		{
 			return true;
 		}
@@ -61,7 +61,7 @@ final function bool IsRelevantToGroup( /**xPawn*/Actor target )
 		return false;
 	}
 
-	groupIndex = Manager.GetGroupIndexByPlayer( Pawn(target).Controller );	
+	groupIndex = Manager.GetGroupIndexByPlayer( Pawn(target).Controller );
 	return groupIndex != -1 && Manager.Groups[groupIndex].Instance == self;
 }
 
