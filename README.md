@@ -29,3 +29,6 @@ The New Tools
     GroupTeleporter (NavigationPoint->...->Teleporter)
         Unlike the standard Teleporter, a group teleporter will just teleport all the group members along with it.
 
+Quirks
+==
+If you wish for your map to have solo records, you must make sure that you have placed only one GroupObjective in your map. Your map should also be prefixed with "GTR-MapName" or the older accepted form "AS-Group-MapName"
