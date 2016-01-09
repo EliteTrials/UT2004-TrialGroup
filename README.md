@@ -27,5 +27,5 @@ The New Tools
         This is an adapted version of Assault's ProximityObjective. When touched, it will complete the map for each member of the group. It also requires that the group has completed all of the placed tasks that are marked not-optional. 
         
     GroupTeleporter (NavigationPoint->...->Teleporter)
-        Unlike the standard Teleporter, a group teleporter will just teleport all the group members along with.
+        Unlike the standard Teleporter, a group teleporter will just teleport all the group members along with it.
 
