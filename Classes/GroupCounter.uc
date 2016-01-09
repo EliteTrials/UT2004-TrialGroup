@@ -51,7 +51,7 @@ Begin:
 	Sleep( 0.5f );
 	for( _TickIndex = 0; _TickIndex < _TicksCount; ++ _TickIndex )
 	{
-		Log("Sending countdown tick to groupIndex:" @ _GroupIndex @ "name:" @ Manager.Groups[_GroupIndex].GroupName);
+		// Log("Sending countdown tick to groupIndex:" @ _GroupIndex @ "name:" @ Manager.Groups[_GroupIndex].GroupName);
 		Manager.GroupSendMessage( _GroupIndex, Repl(CountMessage, "%i", _TicksCount - _TickIndex), Manager.CounterMessageClass );
 		Sleep( 1.01f );
 	}
