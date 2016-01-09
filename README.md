@@ -12,8 +12,8 @@ The New Tools
     GroupTriggerVolume
         A touch volume, but restricted to a group. Its event will be instigated when all members of the group are inside the volume.
         
-    GroupLinkedTriggerVolume
-        Just like the GroupTriggerVolume, but can instead be linked to another GroupLinkedTriggerVolume in order to split up the group.
+    GroupMultiTriggerVolume
+        Just like the GroupTriggerVolume, but can instead be linked to another GroupMultiTriggerVolume in order to split up the group. A GroupMultiVolumesManager (Actor->Info) is required to link your volumes.
         
     GroupTaskComplete (Triggers->GroupTrigger)
         Similar to Assault's TriggeredObjective, this actor lets you define an objective that can only be completed by instigating it with an event from another actor such as a GroupTriggerVolume, ShoortTarget, or anything else you can come up with!
@@ -25,4 +25,10 @@ The New Tools
         
     GroupObjective (NavigationPoint->...->GameObjective)
         This is an adapted version of Assault's ProximityObjective. When touched, it will complete the map for each member of the group. It also requires that the group has completed all of the placed tasks that are marked not-optional. 
+        
+    GroupTeleporter (NavigationPoint->...->Teleporter)
+        Unlike the standard Teleporter, a group teleporter will just teleport all the group members along with it.
 
+Quirks
+==
+If you wish for your map to have solo records, you must make sure that you have placed only one GroupObjective in your map. Your map should also be prefixed with "GTR-MapName" or the older accepted form "AS-Group-MapName"
