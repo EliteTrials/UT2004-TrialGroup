@@ -11,12 +11,31 @@ var private editconst noexport bool bMenuModified;
 var private editconst noexport float LastCmdTime;
 const ASHUD = class'HUD_Assault';
 
+var protected GroupRadar Radar;
+
+event Initialized()
+{
+	super.Initialized();
+	foreach ViewportOwner.Actor.AllActors( class'GroupRadar', Radar )
+	{
+		break;
+	}
+
+	if( Radar == none )
+	{
+		Radar = ViewportOwner.Actor.Spawn( class'GroupRadar', ViewportOwner.Actor );
+	}
+	else
+	{
+		Radar.SetOwner( ViewportOwner.Actor );
+	}
+}
+
 event NotifyLevelChange()
 {
 	Master.RemoveInteraction( Self );
 }
 
-//	NOTE: When using this function in your code you should credit me(see license)for this function out of respect!.
 final private function ModifyMenu()
 {
 	local UT2K4PlayerLoginMenu Menu;
@@ -206,6 +225,11 @@ function PostRender( Canvas C )
 			}
 		}
 	}
+
+	if( Radar != none )
+	{
+		Radar.Render( C, ViewportOwner.Actor );
+	}
 }
 
 final static function bool IsTargetInView( Canvas C, Actor viewer, Vector targetlocation, float maxDistance, optional out byte bIsVisible, optional out float distance )
@@ -229,6 +253,11 @@ final static function bool IsTargetInView( Canvas C, Actor viewer, Vector target
 
 	bIsVisible = byte(viewer.FastTrace( targetlocation, camLoc ));
 	return true;
+}
+
+exec function LogPosition()
+{
+	ViewportOwner.Actor.ClientMessage( "Pos:" @ ViewportOwner.Actor.Pawn.Location );
 }
 
 defaultproperties
