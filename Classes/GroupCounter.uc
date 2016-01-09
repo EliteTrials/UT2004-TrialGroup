@@ -9,7 +9,7 @@ class GroupCounter extends Info
 	transient;
 
 var GroupManager Manager;
-var protected int GroupIndex;
+var protected int _GroupIndex;
 var protected int _TicksCount;
 var private int _TickIndex;
 
@@ -38,7 +38,7 @@ event PreBeginPlay()
 function Start( int groupIndex, int ticks )
 {
 	_TicksCount = ticks;
-	GroupIndex = groupIndex;
+	_GroupIndex = groupIndex;
 	GotoState( 'CountDown' );
 }
 
@@ -47,16 +47,16 @@ state CountDown
 	function BeginState();
 
 Begin:
-	//Manager.GroupSendMessage( GroupIndex, PrepareMessage, Manager.CounterMessageClass );
+	//Manager.GroupSendMessage( _GroupIndex, PrepareMessage, Manager.CounterMessageClass );
 	Sleep( 0.5f );
 	for( _TickIndex = 0; _TickIndex < _TicksCount; ++ _TickIndex )
 	{
-		Log("Sending countdown tick to groupIndex:" @ GroupIndex @ "name:" @ Manager.Groups[GroupIndex].GroupName);
-		Manager.GroupSendMessage( GroupIndex, Repl(CountMessage, "%i", _TicksCount - _TickIndex), Manager.CounterMessageClass );
+		Log("Sending countdown tick to groupIndex:" @ _GroupIndex @ "name:" @ Manager.Groups[_GroupIndex].GroupName);
+		Manager.GroupSendMessage( _GroupIndex, Repl(CountMessage, "%i", _TicksCount - _TickIndex), Manager.CounterMessageClass );
 		Sleep( 1.01f );
 	}
 
-	Manager.GroupSendMessage( GroupIndex, class'HUD'.default.RedColor $ GoMessage, Manager.CounterMessageClass );
+	Manager.GroupSendMessage( _GroupIndex, class'HUD'.default.RedColor $ GoMessage, Manager.CounterMessageClass );
 	Destroy();
 }
 
