@@ -1,8 +1,15 @@
-#exec obj load file="Radar.utx" package="TrialGroup"
-#exec TEXTURE IMPORT NAME=RadarBorder FILE=Resources\RadarBorder.dds MIPS=OFF ALPHA=1 LODSET=5 DXT=5 UCLAMPMODE=TC_Clamp VCLAMPMODE=TC_Clamp
+/*==============================================================================
+   TrialGroup
+   Copyright (C) 2010 - 2016 Eliot Van Uytfanghe
 
+   This program is free software; you can redistribute and/or modify
+   it under the terms of the Open Unreal Mod License version 1.1.
+==============================================================================*/
 class GroupRadar extends Info
 	placeable;
+
+#exec obj load file="Radar.utx" package="TrialGroup"
+#exec TEXTURE IMPORT NAME=RadarBorder FILE=Resources\RadarBorder.dds MIPS=OFF ALPHA=1 LODSET=5 DXT=5 UCLAMPMODE=TC_Clamp VCLAMPMODE=TC_Clamp
 
 const BorderThickness = 14;
 const MarkerSize = 12;
@@ -33,6 +40,10 @@ simulated event PostBeginPlay()
 	super.PostBeginPlay();
 	if( Level.NetMode != NM_DedicatedServer )
 	{
+		if( MapTexture == none )
+		{
+			MapTexture = Texture'Engine.WhiteSquareTexture';
+		}
 		MapRenderTexture.Client = self;
 		MapTextureSize = MapTexture.MaterialUSize();
 		// Shader(RadarMap.Material).Diffuse = MapRenderTexture;
@@ -41,96 +52,6 @@ simulated event PostBeginPlay()
 
 simulated function Render( Canvas C, PlayerController PC )
 {
-	local HUD_Assault hud;
-
-	hud = HUD_Assault(PlayerOwner.myHUD);
-	if( hud != none )
-	{
-		hud.RoundTimeBackGround.RenderStyle = STY_None;
-		hud.RoundTimeBackGround.DrawPivot = DP_UpperLeft;
-		hud.RoundTimeBackGround.PosX = -100;
-		hud.RoundTimeBackGround.PosY = -100;
-		hud.RoundTimeBackgroundDisc.RenderStyle = STY_None;
-		hud.RoundTimeBackgroundDisc.DrawPivot = DP_UpperLeft;
-		hud.RoundTimeBackgroundDisc.PosX = -100;
-		hud.RoundTimeBackgroundDisc.PosY = -100;
-		hud.RoundTimeSeparator.RenderStyle = STY_None;
-		hud.RoundTimeSeparator.DrawPivot = DP_UpperLeft;
-		hud.RoundTimeSeparator.PosX = -100;
-		hud.RoundTimeSeparator.PosY = -100;
-		hud.RoundTimeIcon.RenderStyle = STY_None;
-		hud.RoundTimeIcon.DrawPivot = DP_UpperLeft;
-		hud.RoundTimeIcon.PosX = -100;
-		hud.RoundTimeIcon.PosY = -100;
-		hud.RoundTimeMinutes.RenderStyle = STY_None;
-		hud.RoundTimeMinutes.DrawPivot = DP_UpperLeft;
-		hud.RoundTimeMinutes.PosX = -100;
-		hud.RoundTimeMinutes.PosY = -100;
-		hud.RoundTimeSeconds.RenderStyle = STY_None;
-		hud.RoundTimeSeconds.DrawPivot = DP_UpperLeft;
-		hud.RoundTimeSeconds.PosX = -100;
-		hud.RoundTimeSeconds.PosY = -100;
-
-		hud.ReinforceBackGround.RenderStyle = STY_None;
-		hud.ReinforceBackGround.DrawPivot = DP_UpperLeft;
-		hud.ReinforceBackGround.PosX = -100;
-		hud.ReinforceBackGround.PosY = -100;
-		hud.ReinforceBackgroundDisc.RenderStyle = STY_None;
-		hud.ReinforceBackgroundDisc.DrawPivot = DP_UpperLeft;
-		hud.ReinforceBackgroundDisc.PosX = -100;
-		hud.ReinforceBackgroundDisc.PosY = -100;
-		hud.ReinforceIcon.RenderStyle = STY_None;
-		hud.ReinforceIcon.DrawPivot = DP_UpperLeft;
-		hud.ReinforceIcon.PosX = -100;
-		hud.ReinforceIcon.PosY = -100;
-		hud.ReinforceSprNum.RenderStyle = STY_None;
-		hud.ReinforceSprNum.DrawPivot = DP_UpperLeft;
-		hud.ReinforceSprNum.PosX = -100;
-		hud.ReinforceSprNum.PosY = -100;
-		hud.ReinforcePulse.RenderStyle = STY_None;
-		hud.ReinforcePulse.DrawPivot = DP_UpperLeft;
-		hud.ReinforcePulse.PosX = -100;
-		hud.ReinforcePulse.PosY = -100;
-
-		hud.TeleportBackGround.RenderStyle = STY_None;
-		hud.TeleportBackGround.DrawPivot = DP_UpperLeft;
-		hud.TeleportBackGround.PosX = -100;
-		hud.TeleportBackGround.PosY = -100;
-		hud.TeleportBackgroundDisc.RenderStyle = STY_None;
-		hud.TeleportBackgroundDisc.DrawPivot = DP_UpperLeft;
-		hud.TeleportBackgroundDisc.PosX = -100;
-		hud.TeleportBackgroundDisc.PosY = -100;
-		hud.TeleportIcon.RenderStyle = STY_None;
-		hud.TeleportIcon.DrawPivot = DP_UpperLeft;
-		hud.TeleportIcon.PosX = -100;
-		hud.TeleportIcon.PosY = -100;
-		hud.TeleportSprNum.RenderStyle = STY_None;
-		hud.TeleportSprNum.DrawPivot = DP_UpperLeft;
-		hud.TeleportSprNum.PosX = -100;
-		hud.TeleportSprNum.PosY = -100;
-		hud.TeleportPulse.RenderStyle = STY_None;
-		hud.TeleportPulse.DrawPivot = DP_UpperLeft;
-		hud.TeleportPulse.PosX = -100;
-		hud.TeleportPulse.PosY = -100;
-
-		hud.VSBackground.RenderStyle = STY_None;
-		hud.VSBackground.DrawPivot = DP_UpperLeft;
-		hud.VSBackground.PosX = -100;
-		hud.VSBackground.PosY = -100;
-		hud.VSIcon.RenderStyle = STY_None;
-		hud.VSIcon.DrawPivot = DP_UpperLeft;
-		hud.VSIcon.PosX = -100;
-		hud.VSIcon.PosY = -100;
-		hud.VSPulse.RenderStyle = STY_None;
-		hud.VSPulse.DrawPivot = DP_UpperLeft;
-		hud.VSPulse.PosX = -100;
-		hud.VSPulse.PosY = -100;
-		hud.VSBackgroundDisc.RenderStyle = STY_None;
-		hud.VSBackgroundDisc.DrawPivot = DP_UpperLeft;
-		hud.VSBackgroundDisc.PosX = -100;
-		hud.VSBackgroundDisc.PosY = -100;
-	}
-
 	RW = RadarWidth*0.5 * C.ClipX;
 	RH = RW;
 
@@ -141,7 +62,81 @@ simulated function Render( Canvas C, PlayerController PC )
 
 	PlayerOwner = PC;
 	ViewTarget = PC.ViewTarget;
+	FixHud();
 	DrawMap( C );
+}
+
+simulated function FixHud()
+{
+	local HUD_Assault hud;
+
+	hud = HUD_Assault(PlayerOwner.myHUD);
+	if( hud != none )
+	{
+		hud.RoundTimeBackGround.DrawPivot = DP_UpperLeft;
+		hud.RoundTimeBackGround.PosX = -100;
+		hud.RoundTimeBackGround.PosY = -100;
+		hud.RoundTimeBackgroundDisc.DrawPivot = DP_UpperLeft;
+		hud.RoundTimeBackgroundDisc.PosX = -100;
+		hud.RoundTimeBackgroundDisc.PosY = -100;
+		hud.RoundTimeSeparator.DrawPivot = DP_UpperLeft;
+		hud.RoundTimeSeparator.PosX = -100;
+		hud.RoundTimeSeparator.PosY = -100;
+		hud.RoundTimeIcon.DrawPivot = DP_UpperLeft;
+		hud.RoundTimeIcon.PosX = -100;
+		hud.RoundTimeIcon.PosY = -100;
+		hud.RoundTimeMinutes.DrawPivot = DP_UpperLeft;
+		hud.RoundTimeMinutes.PosX = -100;
+		hud.RoundTimeMinutes.PosY = -100;
+		hud.RoundTimeSeconds.DrawPivot = DP_UpperLeft;
+		hud.RoundTimeSeconds.PosX = -100;
+		hud.RoundTimeSeconds.PosY = -100;
+
+		hud.ReinforceBackGround.DrawPivot = DP_UpperLeft;
+		hud.ReinforceBackGround.PosX = -100;
+		hud.ReinforceBackGround.PosY = -100;
+		hud.ReinforceBackgroundDisc.DrawPivot = DP_UpperLeft;
+		hud.ReinforceBackgroundDisc.PosX = -100;
+		hud.ReinforceBackgroundDisc.PosY = -100;
+		hud.ReinforceIcon.DrawPivot = DP_UpperLeft;
+		hud.ReinforceIcon.PosX = -100;
+		hud.ReinforceIcon.PosY = -100;
+		hud.ReinforceSprNum.DrawPivot = DP_UpperLeft;
+		hud.ReinforceSprNum.PosX = -100;
+		hud.ReinforceSprNum.PosY = -100;
+		hud.ReinforcePulse.DrawPivot = DP_UpperLeft;
+		hud.ReinforcePulse.PosX = -100;
+		hud.ReinforcePulse.PosY = -100;
+
+		hud.TeleportBackGround.DrawPivot = DP_UpperLeft;
+		hud.TeleportBackGround.PosX = -100;
+		hud.TeleportBackGround.PosY = -100;
+		hud.TeleportBackgroundDisc.DrawPivot = DP_UpperLeft;
+		hud.TeleportBackgroundDisc.PosX = -100;
+		hud.TeleportBackgroundDisc.PosY = -100;
+		hud.TeleportIcon.DrawPivot = DP_UpperLeft;
+		hud.TeleportIcon.PosX = -100;
+		hud.TeleportIcon.PosY = -100;
+		hud.TeleportSprNum.DrawPivot = DP_UpperLeft;
+		hud.TeleportSprNum.PosX = -100;
+		hud.TeleportSprNum.PosY = -100;
+		hud.TeleportPulse.DrawPivot = DP_UpperLeft;
+		hud.TeleportPulse.PosX = -100;
+		hud.TeleportPulse.PosY = -100;
+
+		hud.VSBackground.DrawPivot = DP_UpperLeft;
+		hud.VSBackground.PosX = -100;
+		hud.VSBackground.PosY = -100;
+		hud.VSIcon.DrawPivot = DP_UpperLeft;
+		hud.VSIcon.PosX = -100;
+		hud.VSIcon.PosY = -100;
+		hud.VSPulse.DrawPivot = DP_UpperLeft;
+		hud.VSPulse.PosX = -100;
+		hud.VSPulse.PosY = -100;
+		hud.VSBackgroundDisc.DrawPivot = DP_UpperLeft;
+		hud.VSBackgroundDisc.PosX = -100;
+		hud.VSBackgroundDisc.PosY = -100;
+	}
 }
 
 simulated function Vector GetMapPosFor( Vector pos, optional float clampRange )
