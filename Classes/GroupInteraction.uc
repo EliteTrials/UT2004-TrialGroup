@@ -12,6 +12,8 @@ var private editconst noexport float LastCmdTime;
 const ASHUD = class'HUD_Assault';
 
 var protected GroupRadar Radar;
+var protected GroupManager Manager;
+var protected GroupHud gHud;
 
 event Initialized()
 {
@@ -21,6 +23,12 @@ event Initialized()
 		break;
 	}
 
+	foreach ViewportOwner.Actor.AllActors( class'GroupManager', Manager )
+	{
+		break;
+	}
+
+
 	if( Radar == none )
 	{
 		Radar = ViewportOwner.Actor.Spawn( class'GroupRadar', ViewportOwner.Actor );
@@ -29,10 +37,16 @@ event Initialized()
 	{
 		Radar.SetOwner( ViewportOwner.Actor );
 	}
+
+	gHud = ViewportOwner.Actor.Spawn( class'GroupHUD' );
+	gHud.Manager = Manager;
+	ViewportOwner.Actor.myHUD.AddHudOverlay( gHud );
 }
 
 event NotifyLevelChange()
 {
+	Radar = none;
+	gHud = none;
 	Master.RemoveInteraction( Self );
 }
 

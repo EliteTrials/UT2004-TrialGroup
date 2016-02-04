@@ -8,7 +8,7 @@
 class GroupTaskComplete extends GroupTrigger
 	placeable;
 
-#exec obj load file="../Sounds/Stock/GameSounds.uax";
+#exec obj load file="GameSounds.uax";
 
 /** The name of this task, this property was used to identify whether a group had completed it already. But now it's only part of a message. */
 var() localized string TaskName;
@@ -43,6 +43,16 @@ var(Events) private const name EventWhenAlreadyComplete;
 
 /** The complete message to broadcast to the instigator's group members. */
 var() localized string lzCompleteMessage;
+
+event PostBeginPlay()
+{
+	super.PostBeginPlay();
+
+	if( Manager != none )
+	{
+		Manager.RegisterTask( self );
+	}
+}
 
 function Trigger( Actor Other, Pawn Instigator )
 {
@@ -113,4 +123,7 @@ defaultproperties
 	bOptionalTask=false
 	OptionalTaskReward=OTR_Two
 	CompletedAnnouncement=GameSounds.DDAverted
+
+	bGameRelevant=true
+	bNoDelete=true
 }

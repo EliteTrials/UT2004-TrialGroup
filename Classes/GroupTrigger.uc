@@ -9,3 +9,9 @@ class GroupTrigger extends Triggers
 	hidecategories(Lighting,LightColor,Karma,Force,Collision,Sound);
 
 var editconst noexport GroupManager Manager;
+
+event PostBeginPlay()
+{
+	super.PostBeginPlay();
+	Manager = class'GroupManager'.static.Get( Level );
+}

@@ -67,6 +67,12 @@ static final operator(102) string $( Color B, coerce string A )
 	return (Chr( 0x1B ) $ (Chr( Max( B.R, 1 ) ) $ Chr( Max( B.G, 1 ) ) $ Chr( Max( B.B, 1 ) ))) $ A;
 }
 
+simulated event PostBeginPlay()
+{
+	super.PostBeginPlay();
+	Manager = class'GroupManager'.static.Get( Level );
+}
+
 /**
  * Returns a list of all xPawn(Players) that are touching this volume.
  * #Client: Returns only the touches of local actors such as a player's own pawn but not any others.
