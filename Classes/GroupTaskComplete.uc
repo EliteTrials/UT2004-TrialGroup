@@ -44,6 +44,9 @@ var(Events) private const name EventWhenAlreadyComplete;
 /** The complete message to broadcast to the instigator's group members. */
 var() localized string lzCompleteMessage;
 
+/** Any death cause except for "suicide" will respawn the dying player to a Teleporter with a matching tag. */
+var() name CheckPointTag;
+
 event PostBeginPlay()
 {
 	super.PostBeginPlay();
@@ -58,8 +61,9 @@ function Trigger( Actor Other, Pawn Instigator )
 {
 	local int i, groupIndex;
 	local string s;
+	local Teleporter tele;
 
-	if( Instigator == None || Instigator.Controller == None )
+	if( Instigator == none || Instigator.Controller == none )
 	{
 		Warn( "A group task was triggered without an instigator!" );
 		return;
@@ -75,14 +79,33 @@ function Trigger( Actor Other, Pawn Instigator )
 				// Already completed!
 				if( EventWhenAlreadyComplete != '' )
 				{
-					TriggerEvent( EventWhenAlreadyComplete, Self, Instigator );
+					TriggerEvent( EventWhenAlreadyComplete, self, Instigator );
 				}
 				return;
 			}
 		}
 
+		if( CheckPointTag != '' )
+		{
+			// FindPlayerStart involves too many dynamic conditions due mutators so we look it up directly.
+			foreach AllActors( class'Teleporter', tele )
+				if( tele.Tag == CheckPointTag )
+				{
+					Manager.Groups[groupIndex].Instance.GroupCheckPoint = tele;
+				}
+
+			// Manager.Groups[groupIndex].Instance.GroupCheckPoint = Teleporter(Level.Game.FindPlayerStart(
+			// 	Instigator.Controller,
+			// 	Instigator.GetTeamNum(),
+			// 	string(CheckPointTag)
+			// ));
+		}
 		Manager.Groups[groupIndex].CompletedTasks[Manager.Groups[groupIndex].CompletedTasks.Length] = self;
-		s = Repl(Repl(Repl(lzCompleteMessage, "%name%", Taskname), "%n", Manager.GetGroupCompletedTasks( groupIndex, False )), "%c", Manager.Tasks.Length);
+		s = Repl(Repl(Repl(lzCompleteMessage,
+			"%name%", Taskname),
+			"%n", Manager.GetGroupCompletedTasks( groupIndex, false )),
+			"%c", Manager.Tasks.Length
+		);
 		Manager.GroupSendMessage( groupIndex, s, Manager.TaskMessageClass );
 		Manager.GroupPlaySound( groupIndex, CompletedAnnouncement );
 

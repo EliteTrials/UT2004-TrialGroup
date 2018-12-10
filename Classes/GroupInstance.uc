@@ -15,6 +15,8 @@ var Color GroupColor;
 var GroupPlayerLinkedReplicationInfo Commander;
 var private string QueueMessage;
 
+var Teleporter GroupCheckPoint;
+
 replication
 {
 	reliable if( IsRelevantToGroup( Level.ReplicationViewTarget ) )
@@ -35,6 +37,12 @@ event PreBeginPlay()
 	GroupColor.R = Rand( 255 );
 	GroupColor.G = Rand( 255 );
 	GroupColor.B = Rand( 255 );
+}
+
+event Reset()
+{
+	super.Reset();
+	GroupCheckPoint = none;
 }
 
 final simulated function bool IsMember( Pawn pawn )
@@ -61,7 +69,7 @@ final function bool IsRelevantToGroup( /**xPawn*/Actor target )
 		return false;
 	}
 
-	groupIndex = Manager.GetGroupIndexByPlayer( Pawn(target).Controller );	
+	groupIndex = Manager.GetGroupIndexByPlayer( Pawn(target).Controller );
 	return groupIndex != -1 && Manager.Groups[groupIndex].Instance == self;
 }
 

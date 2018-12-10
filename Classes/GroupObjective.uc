@@ -51,7 +51,7 @@ function Trigger( Actor Other, Pawn Instigator )
 			return;
 		}
 
-		// Give everyone a reward except the instigator because the instigator will get one by the gameinfo class!.
+		// Give everyone a reward except the instigator because the instigator will get one from the gameinfo class!.
 		for( m = 0; m < Manager.Groups[groupindex].Members.Length; ++ m )
 		{
 			if( Manager.Groups[groupindex].Members[m] != Instigator.Controller )
@@ -63,6 +63,9 @@ function Trigger( Actor Other, Pawn Instigator )
 				}
 			}
 		}
+
+		Manager.Groups[groupindex].CompletedTasks.Length = 0;
+		Manager.Groups[groupindex].Instance.GroupCheckPoint = none;
 		DisableObjective( Instigator );
 	}
 	else
@@ -78,5 +81,5 @@ defaultproperties
 	ObjectiveDescription="Trigger Objective with a group to disable it."
 	ObjectiveName="Group Objective"
 
-	Info="You must name your map AS-Group-* in order for this to function with BTimes. Warning: This objective has to be the final objective."
+	Info="Your map's name must be prefixed as AS-Group- or GTR- to function with BTimes. Warning: This objective has to be the final objective."
 }
