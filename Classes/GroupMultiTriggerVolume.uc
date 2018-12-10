@@ -39,7 +39,7 @@ event PawnEnteredVolume( Pawn other )
 	}
 	else
 	{
-		xPawn(other).ClientMessage( class'GroupManager'.default.GroupColor $ "Sorry you cannot contribute to this volume because you are not in a group!" );
+		xPawn(other).ClientMessage( class'GroupManager'.default.GroupColor $ "Sorry you cannot contribute until you join a group!" );
 	}
 }
 

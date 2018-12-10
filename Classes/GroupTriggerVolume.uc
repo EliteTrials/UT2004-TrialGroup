@@ -211,8 +211,7 @@ event PawnEnteredVolume( Pawn other )
     groupIndex = Manager.GetGroupIndexByPlayer( other.Controller );
 	if( groupIndex == -1 )
 	{
-		xPawn(other).ClientMessage( Class'GroupManager'.Default.GroupColor
-			$ "Sorry you cannot contribute to this volume because you are not in a group!" );
+		xPawn(other).ClientMessage( class'GroupManager'.default.GroupColor $ "Sorry you cannot contribute until you join a group!" );
 		return;
 	}
 

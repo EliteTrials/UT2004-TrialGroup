@@ -57,19 +57,19 @@ event PostBeginPlay()
 	}
 }
 
-function Trigger( Actor Other, Pawn Instigator )
+function Trigger( Actor Other, Pawn instigator )
 {
 	local int i, groupIndex;
 	local string s;
 	local Teleporter tele;
 
-	if( Instigator == none || Instigator.Controller == none )
+	if( instigator == none || instigator.Controller == none )
 	{
 		Warn( "A group task was triggered without an instigator!" );
 		return;
 	}
 
-	groupIndex = Manager.GetGroupIndexByPlayer( Instigator.Controller );
+	groupIndex = Manager.GetGroupIndexByPlayer( instigator.Controller );
 	if( groupIndex != -1 )
 	{
 		for( i = 0; i < Manager.Groups[groupIndex].CompletedTasks.Length; ++ i )
@@ -79,7 +79,7 @@ function Trigger( Actor Other, Pawn Instigator )
 				// Already completed!
 				if( EventWhenAlreadyComplete != '' )
 				{
-					TriggerEvent( EventWhenAlreadyComplete, self, Instigator );
+					TriggerEvent( EventWhenAlreadyComplete, self, instigator );
 				}
 				return;
 			}
@@ -95,8 +95,8 @@ function Trigger( Actor Other, Pawn Instigator )
 				}
 
 			// Manager.Groups[groupIndex].Instance.GroupCheckPoint = Teleporter(Level.Game.FindPlayerStart(
-			// 	Instigator.Controller,
-			// 	Instigator.GetTeamNum(),
+			// 	instigator.Controller,
+			// 	instigator.GetTeamNum(),
 			// 	string(CheckPointTag)
 			// ));
 		}
@@ -125,14 +125,14 @@ function Trigger( Actor Other, Pawn Instigator )
 
 		if( EventWhenInitialTaskComplete != '' )
 		{
-			TriggerEvent( EventWhenInitialTaskComplete, Self, Instigator );
+			TriggerEvent( EventWhenInitialTaskComplete, self, instigator );
 		}
 	}
 	else
 	{
 		if( EventWhenNoGroup != '' )
 		{
-			TriggerEvent( EventWhenNoGroup, Self, Instigator );
+			TriggerEvent( EventWhenNoGroup, self, instigator );
 		}
 	}
 	// else no group

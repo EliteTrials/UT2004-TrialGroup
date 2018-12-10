@@ -10,7 +10,6 @@ class GroupObjective extends TriggeredObjective
 	placeable;
 
 var editconst noexport GroupManager Manager;
-var() private editconst const noexport string Info;
 
 // Operator from ServerBTimes.u
 static final operator(102) string $( Color B, coerce string A )
@@ -24,53 +23,52 @@ simulated event PostBeginPlay()
 	Manager = class'GroupManager'.static.Get( Level );
 }
 
-function Trigger( Actor Other, Pawn Instigator )
+function Trigger( Actor other, Pawn instigator )
 {
-	local int m, groupindex;
+	local int m, groupIndex;
 
-	if( bDisabled || Instigator == None || Instigator.Controller == None || !UnrealMPGameInfo(Level.Game).CanDisableObjective( Self ) )
+	if( bDisabled || instigator == none || instigator.Controller == none || !UnrealMPGameInfo(Level.Game).CanDisableObjective( self ) )
 	{
 		return;
 	}
 
-    groupindex = Manager.GetGroupIndexByPlayer( Instigator.Controller );
-    if( groupindex != -1 )
+    groupIndex = Manager.GetGroupIndexByPlayer( instigator.Controller );
+    if( groupIndex != -1 )
     {
-    	// Because we are comparing by members length to find out whether the group is fulll, it is important to clear all None references.
-    	Manager.ClearEmptyGroup( groupindex );
+    	// Because we are comparing by members length to find out whether a group is full, it is important to ensure that empty groups or disconnected players have been dereferenced!
+    	Manager.ClearEmptyGroup( groupIndex );
 
-    	if( Manager.Groups[groupindex].Members.Length != Manager.MaxGroupSize )
+    	if( Manager.Groups[groupIndex].Members.Length != Manager.MaxGroupSize )
     	{
-    		xPawn(Instigator).ClientMessage( Class'GroupManager'.Default.GroupColor $ "The group you are in is not at its capacity!, you need a group of size" @ Manager.MaxGroupSize );
+    		xPawn(instigator).ClientMessage( class'GroupManager'.default.GroupColor $ "The group you are in is not at its capacity! You need a group size of" @ Manager.MaxGroupSize );
     		return;
     	}
 
-		if( Manager.Tasks.Length != Manager.GetGroupCompletedTasks( groupindex, False ) )
+		if( Manager.Tasks.Length != Manager.GetGroupCompletedTasks( groupIndex, false ) )
 		{
-			xPawn(Instigator).ClientMessage( Class'GroupManager'.Default.GroupColor $ "The group you are in has not completed all group tasks yet!" );
+			xPawn(instigator).ClientMessage( class'GroupManager'.default.GroupColor $ "You haven't completed all the group tasks yet!" );
 			return;
 		}
 
-		// Give everyone a reward except the instigator because the instigator will get one from the gameinfo class!.
-		for( m = 0; m < Manager.Groups[groupindex].Members.Length; ++ m )
+		// Give the objective's reward to each member of the group. The instigator is ignored here because he or she will be rewarded by the game ender reward.
+		for( m = 0; m < Manager.Groups[groupIndex].Members.Length; ++ m )
 		{
-			if( Manager.Groups[groupindex].Members[m] != Instigator.Controller )
+			if( Manager.Groups[groupIndex].Members[m] != instigator.Controller )
 			{
-				if( ASPlayerReplicationInfo(Manager.Groups[groupindex].Members[m].PlayerReplicationInfo) != None )
+				if( ASPlayerReplicationInfo(Manager.Groups[groupIndex].Members[m].PlayerReplicationInfo) != none )
 				{
-					++ ASPlayerReplicationInfo(Manager.Groups[groupindex].Members[m].PlayerReplicationInfo).DisabledObjectivesCount;
-					++ ASPlayerReplicationInfo(Manager.Groups[groupindex].Members[m].PlayerReplicationInfo).DisabledFinalObjective;
+					++ ASPlayerReplicationInfo(Manager.Groups[groupIndex].Members[m].PlayerReplicationInfo).DisabledObjectivesCount;
+					++ ASPlayerReplicationInfo(Manager.Groups[groupIndex].Members[m].PlayerReplicationInfo).DisabledFinalObjective;
 				}
 			}
 		}
-
 		Manager.Groups[groupindex].CompletedTasks.Length = 0;
 		Manager.Groups[groupindex].Instance.GroupCheckPoint = none;
-		DisableObjective( Instigator );
+		DisableObjective( instigator );
 	}
 	else
 	{
-		xPawn(Instigator).ClientMessage( Class'GroupManager'.Default.GroupColor $ "Sorry you cannot complete the objective, because you're not in a group!" );
+		xPawn(instigator).ClientMessage( class'GroupManager'.default.GroupColor $ "Sorry you cannot complete the objective until you join a group!" );
 	}
 }
 
@@ -80,6 +78,4 @@ defaultproperties
 	Objective_Info_Defender=""
 	ObjectiveDescription="Trigger Objective with a group to disable it."
 	ObjectiveName="Group Objective"
-
-	Info="Your map's name must be prefixed as AS-Group- or GTR- to function with BTimes. Warning: This objective has to be the final objective."
 }

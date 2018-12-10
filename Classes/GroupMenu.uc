@@ -81,7 +81,7 @@ defaultproperties
 
 	Begin Object Class=GUIButton Name=CountDown
 		Hint="Start a group counter with the specified value"
-		Caption="Start group counter"
+		Caption="Start Countdown"
 		WinWidth	=	0.25
 		WinHeight	=	0.040000
 		WinLeft		=	0.010000
@@ -93,7 +93,7 @@ defaultproperties
 	b_CountDown=CountDown
 
 	Begin Object Class=GUINumericEdit Name=CountValue
-		Hint="The amount of seconds the group counter takes to finish"
+		Hint="The number of seconds the group counter takes to finish"
 		WinWidth	=	0.07
 		WinHeight	=	0.040000
 		WinLeft		=	0.265000

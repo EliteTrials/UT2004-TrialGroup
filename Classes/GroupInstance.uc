@@ -39,19 +39,13 @@ event PreBeginPlay()
 	GroupColor.B = Rand( 255 );
 }
 
-event Reset()
-{
-	super.Reset();
-	GroupCheckPoint = none;
-}
-
-final simulated function bool IsMember( Pawn pawn )
+final simulated function bool IsMember( Pawn other )
 {
 	local GroupPlayerLinkedReplicationInfo LRI;
 
 	for( LRI = Commander; LRI != none; LRI = LRI.NextMember )
 	{
-		if( LRI.Pawn == pawn )
+		if( LRI.Pawn == other )
 		{
 			return true;
 		}
