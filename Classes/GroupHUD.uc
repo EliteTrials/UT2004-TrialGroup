@@ -43,6 +43,7 @@ simulated function Render( Canvas C )
 	myGroup = myLRI.PlayerGroup;
 
 	RenderCurrentTask( C );
+	RenderWaizers( C );
 }
 
 simulated function FixHud()
@@ -77,6 +78,16 @@ simulated function RenderCurrentTask( Canvas C )
 	// C.SetPos( x, y );
 	// C.DrawColor = GetGroupColor();
 	// C.DrawText( task.TaskName );
+}
+
+simulated function RenderWaizers( Canvas C )
+{
+	local GroupWaizer waizer;
+
+	foreach DynamicActors( class'GroupWaizer', waizer )
+	{
+		waizer.Render( C );
+	}
 }
 
 simulated function Color GetGroupColor()

@@ -22,6 +22,9 @@ replication
 
 	reliable if( Role == ROLE_Authority )
 		PlayerGroupId, PlayerGroup, NextMember, Pawn;
+
+	reliable if( Role < ROLE_Authority && bNetOwner )
+		ServerSpawnWaizer;
 }
 
 simulated event PostNetBeginPlay()
@@ -43,6 +46,16 @@ simulated function ClientSendMessage( class<GroupLocalMessage> messageClass, str
 	ClientMessage = message;
 	PlayerController(Owner).ReceiveLocalizedMessage( messageClass,,,, self );
 	PlayerController(Owner).Player.Console.Message( message, 1.0 );
+}
+
+function ServerSpawnWaizer( Actor target, vector hitLocation, vector hitNormal )
+{
+	local GroupWaizer waizer;
+
+	waizer = Spawn( class'GroupWaizer',,, hitLocation + 50*hitNormal, rotator(-hitNormal) );
+	waizer.WaizedTarget = target;
+	waizer.OwnerGroup = PlayerGroup;
+	waizer.bIsOurs = true;
 }
 
 event Timer()

@@ -260,6 +260,16 @@ simulated function DrawMap( Canvas C )
 
 			DrawMarker( C, v.x, v.y, class'HUD'.default.PurpleColor, PlayerMarker, 1.0 );
 		}
+		else if( a.IsA('GroupWaizer') )
+		{
+			v = GetMapPosFor( a.Location );
+			if( v.z == -1 )
+			{
+				continue;
+			}
+
+			DrawMarker( C, v.x, v.y, class'HUD'.default.GoldColor, PlayerMarker, 1.0 );
+		}
 	}
 
 	v = GetMapPosFor( MapCenter*-vector(ViewTarget.Rotation) + (MapNorth*MapRange), RadarRange );

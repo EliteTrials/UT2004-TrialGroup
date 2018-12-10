@@ -15,6 +15,8 @@ var protected GroupRadar Radar;
 var protected GroupManager Manager;
 var protected GroupHud gHud;
 
+var float LastWaizeTime;
+
 event Initialized()
 {
 	super.Initialized();
@@ -126,6 +128,36 @@ exec function GroupFast()
 exec function GroupSlow()
 {
 	GroupCountDown( 3 );
+}
+
+exec function bool Waize()
+{
+	local GroupPlayerLinkedReplicationInfo myLRI;
+	local Actor target;
+	local vector hitLocation, hitNormal;
+
+	if( ViewportOwner.Actor.Level.TimeSeconds - LastWaizeTime < 1.5 )
+		return false;
+
+	target = ViewportOwner.Actor.ViewTarget;
+	if( xPawn(target) != none )
+	{
+		myLRI = class'GroupManager'.static.GetGroupPlayerReplicationInfo( xPawn(target).PlayerReplicationInfo );
+	}
+	else if( xPlayer(target) != none )
+	{
+		myLRI = class'GroupManager'.static.GetGroupPlayerReplicationInfo( xPlayer(target).PlayerReplicationInfo );
+	}
+	if( myLRI == none || target == none )
+	{
+		return false;
+	}
+
+	target = myLRI.Pawn.Trace( hitLocation, hitNormal, myLRI.Pawn.Location + 3000*vector(ViewportOwner.Actor.Rotation), myLRI.Pawn.Location + myLRI.Pawn.EyePosition() );
+
+	myLRI.ServerSpawnWaizer( target, hitLocation, hitNormal );
+	LastWaizeTime = ViewportOwner.Actor.Level.TimeSeconds;
+	return true;
 }
 
 function PostRender( Canvas C )
@@ -244,6 +276,15 @@ function PostRender( Canvas C )
 	{
 		Radar.Render( C, ViewportOwner.Actor );
 	}
+}
+
+function bool KeyEvent( out EInputKey key, out EInputAction action, float delta )
+{
+	if( key == IK_F && action == IST_Release )
+	{
+		return Waize();
+	}
+	return false;
 }
 
 final static function bool IsTargetInView( Canvas C, Actor viewer, Vector targetlocation, float maxDistance, optional out byte bIsVisible, optional out float distance )
