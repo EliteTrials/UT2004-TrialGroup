@@ -44,18 +44,32 @@ var(Events) private const name EventWhenAlreadyComplete;
 /** The complete message to broadcast to the instigator's group members. */
 var() localized string lzCompleteMessage;
 
-function Trigger( Actor Other, Pawn Instigator )
+/** Any death cause except for "suicide" will respawn the dying player to a Teleporter with a matching tag. */
+var() name CheckPointTag;
+
+event PostBeginPlay()
+{
+	super.PostBeginPlay();
+
+	if( Manager != none )
+	{
+		Manager.RegisterTask( self );
+	}
+}
+
+function Trigger( Actor Other, Pawn instigator )
 {
 	local int i, groupIndex;
 	local string s;
+	local Teleporter tele;
 
-	if( Instigator == none || Instigator.Controller == none )
+	if( instigator == none || instigator.Controller == none )
 	{
 		Warn( "A group task was triggered without an instigator!" );
 		return;
 	}
 
-	groupIndex = Manager.GetGroupIndexByPlayer( Instigator.Controller );
+	groupIndex = Manager.GetGroupIndexByPlayer( instigator.Controller );
 	if( groupIndex != -1 )
 	{
 		for( i = 0; i < Manager.Groups[groupIndex].CompletedTasks.Length; ++ i )
@@ -65,14 +79,33 @@ function Trigger( Actor Other, Pawn Instigator )
 				// Already completed!
 				if( EventWhenAlreadyComplete != '' )
 				{
-					TriggerEvent( EventWhenAlreadyComplete, self, Instigator );
+					TriggerEvent( EventWhenAlreadyComplete, self, instigator );
 				}
 				return;
 			}
 		}
 
+		if( CheckPointTag != '' )
+		{
+			// FindPlayerStart involves too many dynamic conditions due mutators so we look it up directly.
+			foreach AllActors( class'Teleporter', tele )
+				if( tele.Tag == CheckPointTag )
+				{
+					Manager.Groups[groupIndex].Instance.GroupCheckPoint = tele;
+				}
+
+			// Manager.Groups[groupIndex].Instance.GroupCheckPoint = Teleporter(Level.Game.FindPlayerStart(
+			// 	instigator.Controller,
+			// 	instigator.GetTeamNum(),
+			// 	string(CheckPointTag)
+			// ));
+		}
 		Manager.Groups[groupIndex].CompletedTasks[Manager.Groups[groupIndex].CompletedTasks.Length] = self;
-		s = Repl(Repl(Repl(lzCompleteMessage, "%name%", Taskname), "%n", Manager.GetGroupCompletedTasks( groupIndex, false )), "%c", Manager.Tasks.Length);
+		s = Repl(Repl(Repl(lzCompleteMessage,
+			"%name%", Taskname),
+			"%n", Manager.GetGroupCompletedTasks( groupIndex, false )),
+			"%c", Manager.Tasks.Length
+		);
 		Manager.GroupSendMessage( groupIndex, s, Manager.TaskMessageClass );
 		Manager.GroupPlaySound( groupIndex, CompletedAnnouncement );
 
@@ -92,14 +125,14 @@ function Trigger( Actor Other, Pawn Instigator )
 
 		if( EventWhenInitialTaskComplete != '' )
 		{
-			TriggerEvent( EventWhenInitialTaskComplete, self, Instigator );
+			TriggerEvent( EventWhenInitialTaskComplete, self, instigator );
 		}
 	}
 	else
 	{
 		if( EventWhenNoGroup != '' )
 		{
-			TriggerEvent( EventWhenNoGroup, self, Instigator );
+			TriggerEvent( EventWhenNoGroup, self, instigator );
 		}
 	}
 	// else no group
@@ -113,4 +146,7 @@ defaultproperties
 	bOptionalTask=false
 	OptionalTaskReward=OTR_Two
 	CompletedAnnouncement=GameSounds.DDAverted
+
+	bGameRelevant=true
+	bNoDelete=true
 }

@@ -15,6 +15,8 @@ var Color GroupColor;
 var GroupPlayerLinkedReplicationInfo Commander;
 var private string QueueMessage;
 
+var Teleporter GroupCheckPoint;
+
 replication
 {
 	reliable if( IsRelevantToGroup( Level.ReplicationViewTarget ) )

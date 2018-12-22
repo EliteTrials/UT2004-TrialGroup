@@ -9,7 +9,6 @@ class GroupTeleporter extends Teleporter
 	hidecategories(Lighting,LightColor,Karma,Force,Sound)
 	placeable;
 
-var editconst noexport GroupManager Manager;
 var bool bEnabled_bak;
 
 var() float DisabledTime;
@@ -26,6 +25,7 @@ simulated function PostTouch( Actor Other )
 	local Teleporter D, Dest[16];
 	local int i, groupindex, m;
 	local GroupTeleportEnabler GTE;
+	local GroupManager manager;
 
 	// Teleport to a random teleporter in this local level, if more than one pick random.
 	foreach AllActors( Class'Teleporter', D )
@@ -42,7 +42,8 @@ simulated function PostTouch( Actor Other )
 	i = rand(i);
 	if( Dest[i] != None )
 	{
-        groupindex = Manager.GetGroupIndexByPlayer( xPawn(Other).Controller );
+		manager = class'Groupmanager'.static.Get( Level );
+        groupindex = manager.GetGroupIndexByPlayer( xPawn(Other).Controller );
 		if( groupindex != -1 )
 		{
 			// Teleport the actor into the other teleporter.
@@ -51,11 +52,11 @@ simulated function PostTouch( Actor Other )
 				Other.PlayTeleportEffect( false, true );
 			}
 
-			for( m = 0; m < Manager.Groups[groupindex].Members.Length; ++ m )
+			for( m = 0; m < manager.Groups[groupindex].Members.Length; ++ m )
 			{
-				if( Manager.Groups[groupindex].Members[m].Pawn != None )
+				if( manager.Groups[groupindex].Members[m].Pawn != None )
 				{
-					Dest[i].Accept( Manager.Groups[groupindex].Members[m].Pawn, self );
+					Dest[i].Accept( manager.Groups[groupindex].Members[m].Pawn, self );
 				}
 			}
 

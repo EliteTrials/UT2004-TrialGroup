@@ -41,7 +41,6 @@ struct sGroup
 };
 
 var editconst noexport array<sGroup> Groups;
-var editconst noexport array<GroupObjective> Objectives;
 var editconst noexport array<GroupTaskComplete> Tasks, OptionalTasks;
 var editconst const noexport Color GroupColor;
 var private editconst noexport int NextGroupId, CurrentWanderersGroupId;
@@ -61,52 +60,8 @@ static final operator(102) string $( Color B, coerce string A )
 
 event PreBeginPlay()
 {
-	local GroupObjective Obj;
-	local GroupTrigger Tsk;
-	local GroupTriggerVolume Vlu;
-	local GroupTaskComplete Tk;
-	local GroupTeleporter TP;
-
 	super.PreBeginPlay();
 	Level.Game.BaseMutator.AddMutator( self );
-
-	foreach AllActors( class'GroupObjective', Obj )
-	{
-		Objectives[Objectives.Length] = Obj;
-		Obj.Manager = Self;
-	}
-
-	if( Objectives.Length == 0 )
-	{
-		Warn( "Couldn't find a GroupObjective! Please place a GroupObjective (NavigationPoint->...->GameObjective)" );
-	}
-
-	foreach AllActors( class'GroupTrigger', Tsk )
-	{
-		Tk = GroupTaskComplete(Tsk);
-		if( Tk != none )
-		{
-			if( Tk.bOptionalTask )
-			{
-				OptionalTasks[OptionalTasks.Length] = Tk;
-			}
-			else
-			{
-				Tasks[Tasks.Length] = Tk;
-			}
-		}
-		Tsk.Manager = self;
-	}
-
-	foreach AllActors( class'GroupTeleporter', TP )
-	{
-		 TP.Manager = self;
-	}
-
-	foreach AllActors( class'GroupTriggerVolume', Vlu )
-	{
-		Vlu.Manager = self;
-	}
 }
 
 event PostBeginPlay()
@@ -119,6 +74,16 @@ event PostBeginPlay()
 	gr = Spawn( GroupRulesClass, self );
 	gr.Manager = self;
 	Level.Game.AddGameModifier( gr );
+}
+
+function RegisterTask( GroupTaskComplete task )
+{
+	if( task.bOptionalTask )
+	{
+		OptionalTasks[OptionalTasks.Length] = task;
+		return;
+	}
+	Tasks[Tasks.Length] = task;
 }
 
 event Timer()
@@ -909,6 +874,39 @@ final static function GroupPlayerLinkedReplicationInfo GetGroupPlayerReplication
 		return GroupPlayerLinkedReplicationInfo(LRI);
 	}
 	return none;
+}
+
+/** Returns the GroupManager mutator. Server only. */
+final static function GroupManager Get( LevelInfo world )
+{
+	local Mutator m;
+
+	for( m = world.Game.BaseMutator; m != none; m = m.NextMutator )
+	{
+		if( GroupManager(m) != none )
+		{
+			return GroupManager(m);
+		}
+	}
+	return none;
+}
+
+simulated function GroupTaskComplete GetClosestTask( Vector loc )
+{
+	local GroupTaskComplete closestTask;
+	local int i;
+	local float dist, lastDist;
+
+	for( i = 0; i < Tasks.Length; ++ i )
+	{
+		dist = VSize( loc - Tasks[i].Location );
+		if( dist < lastDist || lastDist == 0 )
+		{
+			closestTask = Tasks[i];
+			lastDist = dist;
+		}
+	}
+	return closestTask;
 }
 
 function bool CheckReplacement( Actor other, out byte bSuperRelevant )

@@ -11,12 +11,47 @@ var private editconst noexport bool bMenuModified;
 var private editconst noexport float LastCmdTime;
 const ASHUD = class'HUD_Assault';
 
+var protected GroupRadar Radar;
+var protected GroupManager Manager;
+var protected GroupHud gHud;
+
+var float LastWaizeTime;
+
+event Initialized()
+{
+	super.Initialized();
+	foreach ViewportOwner.Actor.AllActors( class'GroupRadar', Radar )
+	{
+		break;
+	}
+
+	foreach ViewportOwner.Actor.AllActors( class'GroupManager', Manager )
+	{
+		break;
+	}
+
+
+	if( Radar == none )
+	{
+		Radar = ViewportOwner.Actor.Spawn( class'GroupRadar', ViewportOwner.Actor );
+	}
+	else
+	{
+		Radar.SetOwner( ViewportOwner.Actor );
+	}
+
+	gHud = ViewportOwner.Actor.Spawn( class'GroupHUD' );
+	gHud.Manager = Manager;
+	ViewportOwner.Actor.myHUD.AddHudOverlay( gHud );
+}
+
 event NotifyLevelChange()
 {
+	Radar = none;
+	gHud = none;
 	Master.RemoveInteraction( Self );
 }
 
-//	NOTE: When using this function in your code you should credit me(see license)for this function out of respect!.
 final private function ModifyMenu()
 {
 	local UT2K4PlayerLoginMenu Menu;
@@ -93,6 +128,36 @@ exec function GroupFast()
 exec function GroupSlow()
 {
 	GroupCountDown( 3 );
+}
+
+exec function bool Waize()
+{
+	local GroupPlayerLinkedReplicationInfo myLRI;
+	local Actor target;
+	local vector hitLocation, hitNormal;
+
+	if( ViewportOwner.Actor.Level.TimeSeconds - LastWaizeTime < 1.5 )
+		return false;
+
+	target = ViewportOwner.Actor.ViewTarget;
+	if( xPawn(target) != none )
+	{
+		myLRI = class'GroupManager'.static.GetGroupPlayerReplicationInfo( xPawn(target).PlayerReplicationInfo );
+	}
+	else if( xPlayer(target) != none )
+	{
+		myLRI = class'GroupManager'.static.GetGroupPlayerReplicationInfo( xPlayer(target).PlayerReplicationInfo );
+	}
+	if( myLRI == none || target == none )
+	{
+		return false;
+	}
+
+	target = myLRI.Pawn.Trace( hitLocation, hitNormal, myLRI.Pawn.Location + 3000*vector(ViewportOwner.Actor.Rotation), myLRI.Pawn.Location + myLRI.Pawn.EyePosition() );
+
+	myLRI.ServerSpawnWaizer( target, hitLocation, hitNormal );
+	LastWaizeTime = ViewportOwner.Actor.Level.TimeSeconds;
+	return true;
 }
 
 function PostRender( Canvas C )
@@ -206,6 +271,20 @@ function PostRender( Canvas C )
 			}
 		}
 	}
+
+	if( Radar != none )
+	{
+		Radar.Render( C, ViewportOwner.Actor );
+	}
+}
+
+function bool KeyEvent( out EInputKey key, out EInputAction action, float delta )
+{
+	if( key == IK_F && action == IST_Release )
+	{
+		return Waize();
+	}
+	return false;
 }
 
 final static function bool IsTargetInView( Canvas C, Actor viewer, Vector targetlocation, float maxDistance, optional out byte bIsVisible, optional out float distance )
@@ -229,6 +308,11 @@ final static function bool IsTargetInView( Canvas C, Actor viewer, Vector target
 
 	bIsVisible = byte(viewer.FastTrace( targetlocation, camLoc ));
 	return true;
+}
+
+exec function LogPosition()
+{
+	ViewportOwner.Actor.ClientMessage( "Pos:" @ ViewportOwner.Actor.Pawn.Location );
 }
 
 defaultproperties

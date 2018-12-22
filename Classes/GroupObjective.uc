@@ -17,6 +17,12 @@ static final operator(102) string $( Color B, coerce string A )
 	return (Chr( 0x1B ) $ (Chr( Max( B.R, 1 ) ) $ Chr( Max( B.G, 1 ) ) $ Chr( Max( B.B, 1 ) ))) $ A;
 }
 
+simulated event PostBeginPlay()
+{
+	super.PostBeginPlay();
+	Manager = class'GroupManager'.static.Get( Level );
+}
+
 function Trigger( Actor other, Pawn instigator )
 {
 	local int m, groupIndex;
@@ -56,6 +62,8 @@ function Trigger( Actor other, Pawn instigator )
 				}
 			}
 		}
+		Manager.Groups[groupindex].CompletedTasks.Length = 0;
+		Manager.Groups[groupindex].Instance.GroupCheckPoint = none;
 		DisableObjective( instigator );
 	}
 	else
