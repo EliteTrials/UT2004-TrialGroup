@@ -1,10 +1,31 @@
 # TrialGroup for Unreal Tournament 2004
 
-A set of useful and necessary tools to make and run a Group trials map. Released circa 2010.
+A set of useful and necessary tools for level designers to make GTR (Group Trials) maps. Released circa 2010.
 
 [![GitHub all releases](https://img.shields.io/github/downloads/EliteTrials/UT2004-TrialGroup/total)](https://github.com/EliteTrials/UT2004-TrialGroup/releases)
 
-## Tools
+## Usage for Players
+
+### Console Commands
+
+- JoinGroup \<GroupName\> ```Join or create a specific group by name!```
+- LeaveGroup
+- GroupCountDown [Seconds]
+- GroupGO ```Initiates a shortened countdown to GO!```
+- GroupFast
+- GroupSlow
+- ShowGroupMembers
+- Waize ```Summons a marker to where you are pointing```
+
+Tip! Bind a shortcut for **GroupGO** using ```set input Q GroupGO```.
+
+### Key Bindings
+
+- [F] ```Initiates Waize```
+
+## Usage for Level Designers
+
+### Tools
 
     GroupManager (Info->Mutator)
         This actor is needed for your map to function as a Group trials map. This actor also lets you choose the number of players a group must consist of.
@@ -37,31 +58,36 @@ If you wish for your map to have solo records, you must make sure that you have 
 
 Some examples of the **trigger** tools being used in various **GTR** maps:
 
-* GTR-EpicFailures (A crazy 10-people group trials map)
+- GTR-EpicFailures (A crazy 10-people group trials map)
 > [![Watch the video](https://img.youtube.com/vi/cVDr_BNKmC4/hqdefault.jpg)](https://youtu.be/cVDr_BNKmC4)
 
-* GTR-GeometryBasics
+- GTR-GeometryBasics
 > [![Watch the video](https://img.youtube.com/vi/yfIcML7SpyU/hqdefault.jpg)](https://youtu.be/yfIcML7SpyU)
 
 ## Maps of Fame
 
 **In no particular order**
 
-* GTR-EgyptianRush-Classic (GTR-EgyptianRush)
-* GTR-EgyptianRush-Prelude
-* GTR-GeometricAbsolution (GTR-GeometryBasics-Pt2)
-* GTR-GeometryBasics
-* GTR-GSGShooterTech
-* GTR-Hostility
-* GTR-Hostility2
-* GTR-IceWastes
-* GTR-MothershipKran
-* GTR-TheEldoraPassages
-* GTR-TheBastionOfChizra
-* GTR-ForgottenTemple
-* GTR-EpicFailures
-* GTR-MastersOfDodge
+- GTR-EgyptianRush-Classic (GTR-EgyptianRush)
+- GTR-EgyptianRush-Prelude
+- GTR-GeometricAbsolution (GTR-GeometryBasics-Pt2)
+- GTR-GeometryBasics
+- GTR-GSGShooterTech
+- GTR-Hostility
+- GTR-Hostility2
+- GTR-IceWastes
+- GTR-MothershipKran
+- GTR-TheEldoraPassages
+- GTR-TheBastionOfChizra
+- GTR-ForgottenTemple
+- GTR-EpicFailures
+- GTR-MastersOfDodge
 
-* GTR-FractalMap (Billa, Unreleased 2015)
-* GTR-Yoke (EliotVU, Unreleased 2015)
-* GTR-Dungeon (Billa, Unreleased 2016)
+- GTR-FractalMap (Billa, Unreleased 2015)
+- GTR-Yoke (EliotVU, Unreleased 2015)
+- GTR-Dungeon (Billa, Unreleased 2016)
+
+
+## Credits
+
+- **Haydon 'Billa' Jamieson** for taking the initiaitve to develop a group trials mode, and for designing a majority of the maps.
