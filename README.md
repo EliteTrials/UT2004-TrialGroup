@@ -8,20 +8,20 @@ A set of useful and necessary tools for level designers to make GTR (Group Trial
 
 ### Console Commands
 
-- JoinGroup \<GroupName\> ```Join or create a specific group by name!```
+- JoinGroup \<GroupName\> `Join or create a specific group by name!`
 - LeaveGroup
 - GroupCountDown [Seconds]
-- GroupGO ```Initiates a shortened countdown to GO!```
+- GroupGO `Initiates a shortened countdown to GO!`
 - GroupFast
 - GroupSlow
 - ShowGroupMembers
-- Waize ```Summons a marker to where you are pointing```
+- Waize `Summons a marker to where you are pointing`
 
-Tip! Bind a shortcut for **GroupGO** using ```set input Q GroupGO```.
+Tip! Bind a shortcut for **GroupGO** using `set input Q GroupGO`.
 
 ### Key Bindings
 
-- [F] ```Initiates Waize```
+- [F] `Initiates Waize`
 
 ## Usage for Level Designers
 
@@ -58,12 +58,12 @@ If you wish for your map to have solo records, you must make sure that you have 
 
 - GTR-EgyptianRush-Classic (Formerly GTR-EgyptianRush)
   > Rush your way through this Egyptian temple with a Team Mate and escape! Map created 25/4/2010 Classic version includes DMSG noob filter.
-  
+  >
   >  ![Shot00005](https://user-images.githubusercontent.com/808593/223332791-d20065e6-c9e4-416a-aa2b-12223b7eb17b.png)
   
 - GTR-EgyptianRush-Prelude
   > You've stumbled across a cave and decided to explore it with your fellow group members can you complete the Egyptian Rush?
-  
+  >
   > ![Shot00006](https://user-images.githubusercontent.com/808593/223332845-5fd41af9-96e2-484b-b70c-05e2ec2cab70.png)
 
 - GTR-GeometricAbsolution (Formerly GTR-GeometryBasics-Pt2)
@@ -87,6 +87,8 @@ If you wish for your map to have solo records, you must make sure that you have 
 
 - GTR-TheEldoraPassages
   > Welcome to the Eldora Passages, you have made your way here through The Eldora Well, located deep under the Glathriel Village, your task is to find out what is at the end of these passages and locate the Nali locals have gone missing exploring these passages.
+  >
+  > ![Shot00008](https://user-images.githubusercontent.com/808593/223337333-0a5001ba-e3ac-4f14-bf74-53b348549c10.png) ![Shot00007](https://user-images.githubusercontent.com/808593/223337344-edd8c9f1-c41a-4fdb-b445-7ae1ed4ed29d.png)
 
 - GTR-TheBastionOfChizra
 
@@ -100,9 +102,9 @@ If you wish for your map to have solo records, you must make sure that you have 
 
 - GTR-Yoke (EliotVU, Unreleased 2015)
   > A 2-player map, each player must choose their favorite weapon(s), each weapon can only be picked up by one player.
-  
+  >
   > Will you go for the **Momentum Reflector Gun** or the **Assault Rifle**? More weapons can be acquired in later stages.
-  
+  >
   > ![Shot00003](https://user-images.githubusercontent.com/808593/223329499-862d94a9-2e9d-4442-9526-0697d5dd7041.png)
   
 - GTR-Dungeon (Billa, Unreleased 2016)
