@@ -25,6 +25,8 @@ Tip! Bind a shortcut for **GroupGO** using ```set input Q GroupGO```.
 
 ## Usage for Level Designers
 
+If you wish for your map to have solo records, you must make sure that you have placed only one GroupObjective in your map. Your map should also be prefixed with "GTR-MapName" or the older accepted form "AS-Group-MapName"
+
 ### Tools
 
     GroupManager (Info->Mutator)
@@ -50,44 +52,71 @@ Tip! Bind a shortcut for **GroupGO** using ```set input Q GroupGO```.
     GroupTeleporter (NavigationPoint->...->Teleporter)
         Unlike the standard Teleporter, a group teleporter will just teleport all the group members along with it.
 
-## Quirks
+## Maps of Fame
 
-If you wish for your map to have solo records, you must make sure that you have placed only one GroupObjective in your map. Your map should also be prefixed with "GTR-MapName" or the older accepted form "AS-Group-MapName"
+**In no particular order**
+
+- GTR-EgyptianRush-Classic (Formerly GTR-EgyptianRush)
+  > Rush your way through this Egyptian temple with a Team Mate and escape! Map created 25/4/2010 Classic version includes DMSG noob filter.
+  
+  >  ![Shot00005](https://user-images.githubusercontent.com/808593/223332791-d20065e6-c9e4-416a-aa2b-12223b7eb17b.png)
+  
+- GTR-EgyptianRush-Prelude
+  > You've stumbled across a cave and decided to explore it with your fellow group members can you complete the Egyptian Rush?
+  
+  > ![Shot00006](https://user-images.githubusercontent.com/808593/223332845-5fd41af9-96e2-484b-b70c-05e2ec2cab70.png)
+
+- GTR-GeometricAbsolution (Formerly GTR-GeometryBasics-Pt2)
+  > Welcome to Absolution, the uniform sister facility of Geometric-Basic, your only task is A-to-B. Good luck!
+ 
+- GTR-GeometryBasics
+  > A simple group map taking you back to the bare basics of group trials, for those who are new to the game mode.
+  
+- GTR-GSGShooterTech
+  > This test facility was build for the purpose of pitting two people against eachother with the big twist of teamwork, the idea is to race the end of this blood stained puzzle of a test facility for the prize of escaping alive but it isn't that straight forward, some rooms require perfect synchronicity and others pure teamwork. Can you beat the monster that is GSG.
+   
+- GTR-Hostility
+
+- GTR-Hostility2
+  > Welcome back to the friendship running, frustration building team exorcise that is the Hostility Test Facility
+  
+- GTR-IceWastes
+
+- GTR-MothershipKran
+  > Welcome to the Skaarj Mothership Kran, sister ship to the galactic brood carrier, the ship is war-torn and old, much of which is still damaged from previous encounters with space marines which has dwindled the number of skaarj aboard. As you awake to the sound of your door being beaten, there is a revolution, the young green rankless skaarj are defecting and now is your best chance to get out and find a way to take controll of the ship, passages have been unlocked and doors busted open, explore the dark halls of the Mothership Kran, but beware, the guards are alert and looking for you!
+
+- GTR-TheEldoraPassages
+  > Welcome to the Eldora Passages, you have made your way here through The Eldora Well, located deep under the Glathriel Village, your task is to find out what is at the end of these passages and locate the Nali locals have gone missing exploring these passages.
+
+- GTR-TheBastionOfChizra
+
+- GTR-ForgottenTemple
+
+- GTR-EpicFailures
+
+- GTR-MastersOfDodge
+
+- GTR-FractalMap (Billa, Unreleased 2015)
+
+- GTR-Yoke (EliotVU, Unreleased 2015)
+  > A 2-player map, each player must choose their favorite weapon(s), each weapon can only be picked up by one player.
+  
+  > Will you go for the **Momentum Reflector Gun** or the **Assault Rifle**? More weapons can be acquired in later stages.
+  
+  > ![Shot00003](https://user-images.githubusercontent.com/808593/223329499-862d94a9-2e9d-4442-9526-0697d5dd7041.png)
+  
+- GTR-Dungeon (Billa, Unreleased 2016)
 
 ## Gameplay sample
 
 Some examples of the **trigger** tools being used in various **GTR** maps:
 
 - GTR-EpicFailures (A crazy 10-people group trials map)
-> [![Watch the video](https://img.youtube.com/vi/cVDr_BNKmC4/hqdefault.jpg)](https://youtu.be/cVDr_BNKmC4)
+  > [![Watch the video](https://img.youtube.com/vi/cVDr_BNKmC4/hqdefault.jpg)](https://youtu.be/cVDr_BNKmC4)
 
 - GTR-GeometryBasics
-> [![Watch the video](https://img.youtube.com/vi/yfIcML7SpyU/hqdefault.jpg)](https://youtu.be/yfIcML7SpyU)
-
-## Maps of Fame
-
-**In no particular order**
-
-- GTR-EgyptianRush-Classic (GTR-EgyptianRush)
-- GTR-EgyptianRush-Prelude
-- GTR-GeometricAbsolution (GTR-GeometryBasics-Pt2)
-- GTR-GeometryBasics
-- GTR-GSGShooterTech
-- GTR-Hostility
-- GTR-Hostility2
-- GTR-IceWastes
-- GTR-MothershipKran
-- GTR-TheEldoraPassages
-- GTR-TheBastionOfChizra
-- GTR-ForgottenTemple
-- GTR-EpicFailures
-- GTR-MastersOfDodge
-
-- GTR-FractalMap (Billa, Unreleased 2015)
-- GTR-Yoke (EliotVU, Unreleased 2015)
-- GTR-Dungeon (Billa, Unreleased 2016)
-
+  > [![Watch the video](https://img.youtube.com/vi/yfIcML7SpyU/hqdefault.jpg)](https://youtu.be/yfIcML7SpyU)
 
 ## Credits
 
-- **Haydon 'Billa' Jamieson** for taking the initiaitve to develop a group trials mode, and for designing a majority of the maps.
+- **Haydon ' Billa ' Jamieson** for taking the initiaitve to develop a group trials mode, and for designing a majority of the maps.
