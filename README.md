@@ -38,7 +38,30 @@ If you wish for your map to have solo records, you must make sure that you have 
 Some examples of the **trigger** tools being used in various **GTR** maps:
 
 * GTR-EpicFailures (A crazy 10-people group trials map)
-> [![Watch the video](https://img.youtube.com/vi/cVDr_BNKmC4/maxresdefault.jpg)](https://youtu.be/cVDr_BNKmC4)
+> [![Watch the video](https://img.youtube.com/vi/cVDr_BNKmC4/hqdefault.jpg)](https://youtu.be/cVDr_BNKmC4)
 
 * GTR-GeometryBasics
-> [![Watch the video](https://img.youtube.com/vi/yfIcML7SpyU/maxresdefault.jpg)](https://youtu.be/yfIcML7SpyU)
+> [![Watch the video](https://img.youtube.com/vi/yfIcML7SpyU/hqdefault.jpg)](https://youtu.be/yfIcML7SpyU)
+
+## Maps of Fame
+
+**In no particular order**
+
+* GTR-EgyptianRush-Classic (GTR-EgyptianRush)
+* GTR-EgyptianRush-Prelude
+* GTR-GeometricAbsolution (GTR-GeometryBasics-Pt2)
+* GTR-GeometryBasics
+* GTR-GSGShooterTech
+* GTR-Hostility
+* GTR-Hostility2
+* GTR-IceWastes
+* GTR-MothershipKran
+* GTR-TheEldoraPassages
+* GTR-TheBastionOfChizra
+* GTR-ForgottenTemple
+* GTR-EpicFailures
+* GTR-MastersOfDodge
+
+* GTR-FractalMap (Billa, Unreleased 2015)
+* GTR-Yoke (EliotVU, Unreleased 2015)
+* GTR-Dungeon (Billa, Unreleased 2016)
