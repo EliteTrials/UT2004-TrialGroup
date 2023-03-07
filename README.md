@@ -76,10 +76,14 @@ If you wish for your map to have solo records, you must make sure that you have 
   > This test facility was build for the purpose of pitting two people against eachother with the big twist of teamwork, the idea is to race the end of this blood stained puzzle of a test facility for the prize of escaping alive but it isn't that straight forward, some rooms require perfect synchronicity and others pure teamwork. Can you beat the monster that is GSG.
    
 - GTR-Hostility
+  > ![Shot00009](https://user-images.githubusercontent.com/808593/223341160-e9145a62-63c2-4931-90f4-4309507e6d29.png)
+
 
 - GTR-Hostility2
   > Welcome back to the friendship running, frustration building team exorcise that is the Hostility Test Facility
-  
+  > 
+  > ![Shot00012](https://user-images.githubusercontent.com/808593/223341206-ab6b4bc2-bf78-4b61-9c10-b2f547cdba0a.png)
+
 - GTR-IceWastes
 
 - GTR-MothershipKran
