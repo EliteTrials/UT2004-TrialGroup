@@ -35,5 +35,10 @@ If you wish for your map to have solo records, you must make sure that you have 
 
 ## Gameplay sample
 
-GTR-EpicFailures (A crazy 10-people group trials map):
+Some examples of the **trigger** tools being used in various **GTR** maps:
+
+* GTR-EpicFailures (A crazy 10-people group trials map)
 > [![Watch the video](https://img.youtube.com/vi/cVDr_BNKmC4/maxresdefault.jpg)](https://youtu.be/cVDr_BNKmC4)
+
+* GTR-GeometryBasics
+> [![Watch the video](https://img.youtube.com/vi/yfIcML7SpyU/maxresdefault.jpg)](https://youtu.be/yfIcML7SpyU)
