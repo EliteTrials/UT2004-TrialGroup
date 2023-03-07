@@ -1,10 +1,10 @@
-TrialGroup
-==========
+# TrialGroup for Unreal Tournament 2004
 
-A trials mode for Assault on UT2004. First released in 2010.
+A set of useful and necessary tools to make and run a Group trials map. Released circa 2010.
 
-The New Tools
-==
+[![GitHub all releases](https://img.shields.io/github/downloads/EliteTrials/UT2004-TrialGroup/total)](https://github.com/EliteTrials/UT2004-TrialGroup/releases)
+
+## Tools
 
     GroupManager (Info->Mutator)
         This actor is needed for your map to function as a Group trials map. This actor also lets you choose the number of players a group must consist of.
@@ -29,6 +29,11 @@ The New Tools
     GroupTeleporter (NavigationPoint->...->Teleporter)
         Unlike the standard Teleporter, a group teleporter will just teleport all the group members along with it.
 
-Quirks
-==
+## Quirks
+
 If you wish for your map to have solo records, you must make sure that you have placed only one GroupObjective in your map. Your map should also be prefixed with "GTR-MapName" or the older accepted form "AS-Group-MapName"
+
+## Gameplay sample
+
+GTR-EpicFailures (A crazy 10-people group trials map):
+> [![Watch the video](https://img.youtube.com/vi/cVDr_BNKmC4/maxresdefault.jpg)](https://youtu.be/cVDr_BNKmC4)
