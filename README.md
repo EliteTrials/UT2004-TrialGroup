@@ -1,6 +1,6 @@
-# TrialGroup for Unreal Tournament 2004
+# TrialGroup
 
-A set of useful and necessary tools for level designers to make GTR (Group Trials) maps. Released circa 2010.
+TrialGroup implements gameplay logic and level-design tools to assist level designers with the making of GTR (Group Trials) maps for **Unreal Tournament 2004**. 
 
 [![GitHub all releases](https://img.shields.io/github/downloads/EliteTrials/UT2004-TrialGroup/total)](https://github.com/EliteTrials/UT2004-TrialGroup/releases)
 
@@ -8,7 +8,7 @@ A set of useful and necessary tools for level designers to make GTR (Group Trial
 
 ### Console Commands
 
-- JoinGroup \<GroupName\> `Join or create a specific group by name!`
+- JoinGroup \<GroupName\> `Joins or creates a specific group by name!`
 - LeaveGroup
 - GroupCountDown [Seconds]
 - GroupGO `Initiates a shortened countdown to GO!`
@@ -25,32 +25,42 @@ Tip! Bind a shortcut for **GroupGO** using `set input Q GroupGO`.
 
 ## Usage for Level Designers
 
-If you wish for your map to have solo records, you must make sure that you have placed only one GroupObjective in your map. Your map should also be prefixed with "GTR-MapName" or the older accepted form "AS-Group-MapName"
+If you wish for your map to have solo records, you must make sure that you have placed only one GroupObjective in your map. Your map should also be prefixed with `GTR-MapName` or the older accepted form `AS-Group-MapName`
 
 ### Tools
 
-    GroupManager (Info->Mutator)
-        This actor is needed for your map to function as a Group trials map. This actor also lets you choose the number of players a group must consist of.
+- [x] GroupManager `Info->Mutator`
+  - Required in order to enable your map to support groups. The actor lets you configure the size of members that a group is required to have.
+
+- [x] GroupTriggerVolume
+  - A touch volume, activates the **Event** when all members of a group are inside of the volume.
         
-    GroupTriggerVolume
-        A touch volume, but restricted to a group. Its event will be instigated when all members of the group are inside the volume.
-        
-    GroupMultiTriggerVolume
-        Just like the GroupTriggerVolume, but can instead be linked to another GroupMultiTriggerVolume in order to split up the group. A GroupMultiVolumesManager (Actor->Info) is required to link your volumes.
-        
-    GroupTaskComplete (Triggers->GroupTrigger)
-        Similar to Assault's TriggeredObjective, this actor lets you define an objective that can only be completed by instigating it with an event from another actor such as a GroupTriggerVolume, ShoortTarget, or anything else you can come up with!
+- [x] GroupMultiTriggerVolume
+  - A touch volume, activates the **Event** when a partition of the members of a group are inside of all the linked up volumes.
+
+  - [x] GroupMultiVolumesManager `Actor->Info`
+    - Required in order to setup a **GroupMultiTriggerVolume**
+    
+- [x] GroupMessageTrigger `Triggers->GroupTrigger`
+  - A trigger, when activated the **GroupMessage** will be displayed for each member of the instigating group.
+  
+- [x] GroupTaskComplete `Triggers->GroupTrigger`
+  - A task much like an Assault objective that can be completed when triggered by an instigator of a group.
+  - For instance a **GroupTriggerVolume**, **ShoortTarget**, or anything else you can come up with!
         Tasks may be used to reward players, or prevent groups from skipping ahead of a room.
-        The task can be configured as required.
+        The task can be configured as required.   
+  
+- [x] GroupEventTrigger `Triggers->GroupTrigger`
+  - A trigger, when activated the **Event** will be instigated for each member of the instigating group.
+  - e.g. Let's say you have a trigger that gives a player a weapon, but you need this trigger to be instigated for each member of a group.
+  - For instance: **YourEventTrigger** -> **YourGroupEventTrigger** -> **YourWeaponTrigger**
+
+- [x] GroupObjective `NavigationPoint->JumpDest->JumpSpot->GameObjective->TriggeredObjective`
+  - A **TriggeredObjective**, but can only be completed by a group that has completed all of the **GroupTaskComplete** tasks that are marked as non-optional.
+  - For instance: **YourEventTrigger** -> **YourGroupObjective** -> **YourTrigger_ASRoundEnd**
         
-    GroupEventTrigger (Triggers->GroupTrigger)
-        Similar to a traditional trigger but is instead performed for each member of the group. e.g. If you wish to give a weapon to every member of a group, after one member triggers an event, then it is recommended that you use this trigger to instigate the weapon give event, this will then perform the event for each member of the group that instigated this trigger.
-        
-    GroupObjective (NavigationPoint->...->GameObjective)
-        This is an adapted version of Assault's ProximityObjective. When touched, it will complete the map for each member of the group. It also requires that the group has completed all of the placed tasks that are marked not-optional. 
-        
-    GroupTeleporter (NavigationPoint->...->Teleporter)
-        Unlike the standard Teleporter, a group teleporter will just teleport all the group members along with it.
+- [x] GroupTeleporter `NavigationPoint->SmallNavigationPoint->Teleporter`
+  - A **Teleporter**, but upon activation will also teleport all the members of the instigating group.
 
 ## Maps of Fame
 
@@ -129,5 +139,7 @@ Some examples of the **trigger** tools being used in various **GTR** maps:
   > [![Watch the video](https://img.youtube.com/vi/yfIcML7SpyU/hqdefault.jpg)](https://youtu.be/yfIcML7SpyU)
 
 ## Credits!
+
+Released circa 2010.
 
 - **Haydon ' Billa ' Jamieson** for taking the initiaitve to develop a group trials mode, and for designing a majority of the maps.
