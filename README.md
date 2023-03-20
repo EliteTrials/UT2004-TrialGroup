@@ -4,6 +4,12 @@ TrialGroup implements gameplay logic and level-design tools to assist level desi
 
 [![GitHub all releases](https://img.shields.io/github/downloads/EliteTrials/UT2004-TrialGroup/total)](https://github.com/EliteTrials/UT2004-TrialGroup/releases)
 
+## Media
+
+[Group Trials on The Bastion of Chizra](https://youtu.be/-ebO_Sb1clA)
+
+[![Watch the video](https://img.youtube.com/vi/-ebO_Sb1clA/maxresdefault.jpg)](https://youtu.be/-ebO_Sb1clA)
+  
 ## Usage for Players
 
 ### Console Commands
