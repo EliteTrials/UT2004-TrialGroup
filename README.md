@@ -1,6 +1,6 @@
 # TrialGroup
 
-TrialGroup implements gameplay logic and level-design tools to assist level designers with the making of GTR (Group Trials) maps for **Unreal Tournament 2004**. 
+TrialGroup implements gameplay logic and level-design tools to assist level designers with the making of GTR (Group Trials) maps for **Unreal Tournament 2004**.
 
 [![GitHub all releases](https://img.shields.io/github/downloads/EliteTrials/UT2004-TrialGroup/total)](https://github.com/EliteTrials/UT2004-TrialGroup/releases)
 
@@ -40,13 +40,13 @@ If you wish for your map to have solo records, you must make sure that you have 
 
 - [x] GroupTriggerVolume
   - A touch volume, activates the **Event** when all members of a group are inside of the volume.
-        
+
 - [x] GroupMultiTriggerVolume
   - A touch volume, activates the **Event** when a partition of the members of a group are inside of all the linked up volumes.
 
   - [x] GroupMultiVolumesManager `Actor->Info`
     - Required in order to setup a **GroupMultiTriggerVolume**
-    
+
 - [x] GroupMessageTrigger `Triggers->GroupTrigger`
   - A trigger, when activated the **GroupMessage** will be displayed for each member of the instigating group.
   
@@ -54,7 +54,7 @@ If you wish for your map to have solo records, you must make sure that you have 
   - A task much like an Assault objective that can be completed when triggered by an instigator of a group.
   - For instance a **GroupTriggerVolume**, **ShoortTarget**, or anything else you can come up with!
         Tasks may be used to reward players, or prevent groups from skipping ahead of a room.
-        The task can be configured as required.   
+        The task can be configured as required.
   
 - [x] GroupEventTrigger `Triggers->GroupTrigger`
   - A trigger, when activated the **Event** will be instigated for each member of the instigating group.
@@ -64,7 +64,7 @@ If you wish for your map to have solo records, you must make sure that you have 
 - [x] GroupObjective `NavigationPoint->JumpDest->JumpSpot->GameObjective->TriggeredObjective`
   - A **TriggeredObjective**, but can only be completed by a group that has completed all of the **GroupTaskComplete** tasks that are marked as non-optional.
   - For instance: **YourEventTrigger** -> **YourGroupObjective** -> **YourTrigger_ASRoundEnd**
-        
+
 - [x] GroupTeleporter `NavigationPoint->SmallNavigationPoint->Teleporter`
   - A **Teleporter**, but upon activation will also teleport all the members of the instigating group.
 
@@ -84,20 +84,19 @@ If you wish for your map to have solo records, you must make sure that you have 
 
 - GTR-GeometricAbsolution (Formerly GTR-GeometryBasics-Pt2)
   > Welcome to Absolution, the uniform sister facility of Geometric-Basic, your only task is A-to-B. Good luck!
- 
+
 - GTR-GeometryBasics
   > A simple group map taking you back to the bare basics of group trials, for those who are new to the game mode.
   
 - GTR-GSGShooterTech
   > This test facility was build for the purpose of pitting two people against eachother with the big twist of teamwork, the idea is to race the end of this blood stained puzzle of a test facility for the prize of escaping alive but it isn't that straight forward, some rooms require perfect synchronicity and others pure teamwork. Can you beat the monster that is GSG.
-   
+
 - GTR-Hostility
   > ![Shot00009](https://user-images.githubusercontent.com/808593/223341160-e9145a62-63c2-4931-90f4-4309507e6d29.png)
 
-
 - GTR-Hostility2
   > Welcome back to the friendship running, frustration building team exorcise that is the Hostility Test Facility
-  > 
+  >
   > ![Shot00012](https://user-images.githubusercontent.com/808593/223341206-ab6b4bc2-bf78-4b61-9c10-b2f547cdba0a.png)
 
 - GTR-IceWastes
@@ -144,7 +143,7 @@ Some examples of the **trigger** tools being used in various **GTR** maps:
 - GTR-GeometryBasics
   > [![Watch the video](https://img.youtube.com/vi/yfIcML7SpyU/hqdefault.jpg)](https://youtu.be/yfIcML7SpyU)
 
-## Credits!
+## Credits
 
 Released circa 2010.
 

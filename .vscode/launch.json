@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Play",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../System/UT2004.exe",
+            "args": ["GTR-GeometryBasics?Game=UT04TrialGame.UT04Trial_GroupGameInfo?Mutator=ServerBTimes.MutBestTimes?SpectatorOnly=0?NumBots=0?NoBots=1?QuickStart=1", "-norunaway"],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "internalConsole"
+        },
+        {
+            "name": "Debug",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/../System/UDebugger.exe",
+            "args": ["GTR-GeometryBasics?Game=UT04TrialGame.UT04Trial_GroupGameInfo?Mutator=ServerBTimes.MutBestTimes?SpectatorOnly=0?NumBots=0?NoBots=1?QuickStart=1", "-norunaway"],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "internalConsole"
+        },
+    ]
+}
