@@ -15,24 +15,28 @@ const BorderThickness = 14;
 const MarkerSize = 12;
 const PlayerArrowSize = 96;
 
+// 3.141592653589793 / 32768
+const UPI = 0.00009587379;
+
 var float RadarWidth, RadarAngle, ZoomScale;
-var Shader RadarMap;
-var TexRotator RadarMapRotator;
-var ScriptedTexture MapRenderTexture;
-var TexRotator PlayerArrow;
-var Material PlayerMarker;
-var Material FiendMarker;
-var TexRotator RadarBorder;
+var editinline Shader RadarMap;
+var editinline TexRotator RadarMapRotator;
+var editinline ScriptedTexture MapRenderTexture;
+var editinline TexRotator PlayerArrow;
+var Material PlayerMarker, CurrentPlayerMarker;
+var() Material FiendMarker;
+var() Material TaskMarker, TaskOptionalMarker;
+var editinline TexRotator RadarBorder;
 
 var private int MapTextureSize;
-var() Texture MapTexture;
+var() editinline Texture MapTexture;
+var() Color MapTextureColor;
 var() vector MapCenter;
 var() vector MapNorth;
 var() float MapRange;
 var() float RadarRange;
 
-var protected transient float RX, RY, RW, RH;
-var protected transient PlayerController PlayerOwner;
+var protected transient float RX, RY, RW, RH, RW_D_RR, _ScreenScaling, _MarkerScaling;
 var protected transient Actor ViewTarget;
 
 simulated event PostBeginPlay()
@@ -42,7 +46,7 @@ simulated event PostBeginPlay()
 	{
 		if( MapTexture == none )
 		{
-			MapTexture = Texture'Engine.WhiteSquareTexture';
+			MapTexture = Texture'Engine.BlobTexture';
 		}
 		MapRenderTexture.Client = self;
 		MapTextureSize = MapTexture.MaterialUSize();
@@ -50,27 +54,33 @@ simulated event PostBeginPlay()
 	}
 }
 
-simulated function Render( Canvas C, PlayerController PC )
+simulated function Render(Canvas C)
 {
-	RW = RadarWidth*0.5 * C.ClipX;
+    local float hudScaling;
+
+    hudScaling = FClamp(C.Viewport.Actor.MyHud.HUDScale, 0.75, 1.0);
+    _ScreenScaling = C.ClipX*hudScaling;
+    _MarkerScaling = ZoomScale*hudScaling;
+    
+	RW = RadarWidth*0.5*_ScreenScaling;
 	RH = RW;
+    RW_D_RR = RW/RadarRange;
 
 	RX = 8;
 	RY = 8;
 
-	MapRenderTexture.SetSize( RW, RH );
+	MapRenderTexture.SetSize(RW, RH);
 
-	PlayerOwner = PC;
-	ViewTarget = PC.ViewTarget;
-	FixHud();
-	DrawMap( C );
+    ViewTarget = C.Viewport.Actor.ViewTarget;
+	FixHud(C);
+	DrawMap(C);
 }
 
-simulated function FixHud()
+simulated function FixHud(Canvas C)
 {
 	local HUD_Assault hud;
 
-	hud = HUD_Assault(PlayerOwner.myHUD);
+	hud = HUD_Assault(C.Viewport.Actor.myHUD);
 	if( hud != none )
 	{
 		hud.RoundTimeBackGround.DrawPivot = DP_UpperLeft;
@@ -148,7 +158,7 @@ simulated function Vector GetMapPosFor( Vector pos, optional float clampRange )
 	rel = pos - ViewTarget.Location;
 	dir = rel;
 	dir.z = 0;
-	dist = RW/RadarRange*(VSize( dir )*ZoomScale);
+	dist = RW_D_RR*(VSize( dir )*ZoomScale);
 
 	if( dist > RW*0.5 - BorderThickness )
 	{
@@ -156,7 +166,7 @@ simulated function Vector GetMapPosFor( Vector pos, optional float clampRange )
 		dist = RW*(clampRange/RadarRange)*0.5;
 	}
 
-	angle = rotator(dir).Yaw*(pi/32768);
+	angle = rotator(dir).Yaw*UPI;
 	v.x = dist*cos( angle );
 	v.y = dist*sin( angle );
 	return v;
@@ -174,7 +184,7 @@ simulated function RenderTexture( ScriptedTexture tex )
 	playerDir = (MapCenter - ViewTarget.Location);
 	playerDir.z = 0;
 	playerDist = VSize(playerDir);
-	playerAngle = rotator(playerDir).Yaw*(pi/32768);
+	playerAngle = rotator(playerDir).Yaw*(UPI);
 	distInPixels = playerDist/MapRange*MapTextureSize;
 	minimapVisibleSize = RadarRange/MapRange*MapTextureSize;
 
@@ -183,7 +193,7 @@ simulated function RenderTexture( ScriptedTexture tex )
 	// RadarMapRotator.Rotation.Yaw = -ViewTarget.Rotation.Yaw - 16384;
 	// RadarMapRotator.UOffset = x;
 	// RadarMapRotator.VOffset = y;
-	tex.DrawTile( 0, 0, RW, RH, x, y, minimapVisibleSize, minimapVisibleSize, MapTexture, class'HUD'.default.WhiteColor );
+	tex.DrawTile( 0, 0, RW, RH, x, y, minimapVisibleSize, minimapVisibleSize, MapTexture, MapTextureColor );
 }
 
 simulated function DrawMap( Canvas C )
@@ -216,7 +226,7 @@ simulated function DrawMap( Canvas C )
 
 	foreach DynamicActors( class'Actor', a )
 	{
-		if( a.IsA('Monster') )
+		if( Monster(a) != none )
 		{
 			v = GetMapPosFor( a.Location );
 			if( v.z == -1 )
@@ -233,7 +243,7 @@ simulated function DrawMap( Canvas C )
 				DrawMarker( C, v.x, v.y, class'HUD'.default.RedColor, a.Texture, 1.0 );
 			}
 		}
-		else if( a.IsA('xPawn') )
+		else if( xPawn(a) != none )
 		{
 			p = xPawn(a);
 			if( p.Health <= 0 || p == ViewTarget )
@@ -249,18 +259,22 @@ simulated function DrawMap( Canvas C )
 
 			DrawPlayer( C, p, v.x, v.y );
 		}
-		else if( a.IsA('GroupTaskComplete') )
+		else if( GroupTaskComplete(a) != none )
 		{
-			gtc = GroupTaskComplete(a);
 			v = GetMapPosFor( a.Location, RadarRange );
 			// if( v.z == -1 )
 			// {
 			// 	continue;
 			// }
 
-			DrawMarker( C, v.x, v.y, class'HUD'.default.PurpleColor, PlayerMarker, 1.0 );
+			gtc = GroupTaskComplete(a);
+            if (gtc.bOptionalTask) {
+			    DrawMarker( C, v.x, v.y, class'HUD'.default.GoldColor, TaskOptionalMarker, 1.0 );
+            } else {
+			    DrawMarker( C, v.x, v.y, class'HUD'.default.BlueColor, TaskMarker, 1.0 );
+            }
 		}
-		else if( a.IsA('GroupWaizer') )
+		else if( GroupWaizer(a) != none )
 		{
 			v = GetMapPosFor( a.Location );
 			if( v.z == -1 )
@@ -268,16 +282,12 @@ simulated function DrawMap( Canvas C )
 				continue;
 			}
 
-			DrawMarker( C, v.x, v.y, class'HUD'.default.GoldColor, PlayerMarker, 1.0 );
+			DrawMarker( C, v.x, v.y, class'HUD'.default.GoldColor, a.Texture, 1.0 );
 		}
 	}
 
-	v = GetMapPosFor( MapCenter*-vector(ViewTarget.Rotation) + (MapNorth*MapRange), RadarRange );
-	DrawMarker( C, v.x, v.y, class'HUD'.default.RedColor, PlayerMarker, 1.0 );
-
 	// Render self
 	DrawPlayer( C, Pawn(ViewTarget), 0, 0, true );
-	DrawWalls( C, Pawn(ViewTarget) );
 }
 
 simulated function DrawPlayer( Canvas C, Pawn p, float x, float y, optional bool isOwner )
@@ -285,19 +295,19 @@ simulated function DrawPlayer( Canvas C, Pawn p, float x, float y, optional bool
 	local float x1, y1;
 	local float markW, markH, w, h;
 
-	markW = MarkerSize*ZoomScale;
-	markH = MarkerSize*ZoomScale;
+	markW = MarkerSize*_MarkerScaling;
+	markH = markW;
 
+    PlayerArrow.Rotation.Yaw = -ViewTarget.Rotation.Yaw - 16384;
 	if( isOwner )
 	{
 		// markW *= 2;
 		// markH *= 2;
-		w = PlayerArrowSize*ZoomScale;
-		h = PlayerArrowSize*ZoomScale;
+		w = PlayerArrowSize*_MarkerScaling;
+		h = w;
 		x1 = (RX + RW*0.5 + (x - w*0.5)) - markW*0.5;
 		y1 = (RY + RH*0.5 + (y - h*0.5));
-		// angle = ViewTarget.Rotation.Yaw*(pi/32768);
-		PlayerArrow.Rotation.Yaw = -ViewTarget.Rotation.Yaw - 16384;
+		// angle = ViewTarget.Rotation.Yaw*(UPI);
 		C.SetPos( x1 + markW/2*cos( RadarAngle ), y1 + markH/2*sin( RadarAngle ) );
 		C.DrawColor.R = 255;
 		C.DrawColor.G = 255;
@@ -314,15 +324,15 @@ simulated function DrawPlayer( Canvas C, Pawn p, float x, float y, optional bool
 	C.DrawColor.G = 0x93;
 	C.DrawColor.B = 0xA9;
 	C.DrawColor.A = 255;
-	C.DrawTile( PlayerMarker, markW, markH, 0, 0, 16, 16 );
+    C.DrawTile( PlayerMarker, markW, markH, 0, 0, 16, 16 );
 }
 
 simulated function DrawMarker( Canvas C, float x, float y, color clr, Material icon, float scaling )
 {
 	local float w, h;
 
-	w = MarkerSize*scaling*ZoomScale;
-	h = MarkerSize*scaling*ZoomScale;
+	w = MarkerSize*_MarkerScaling*scaling;
+	h = w;
 
 	x = (RX + RW*0.5 + x - w*0.5);
 	y = (RY + RH*0.5 + y - h*0.5);
@@ -332,46 +342,6 @@ simulated function DrawMarker( Canvas C, float x, float y, color clr, Material i
 
 	C.SetPos( x, y );
 	C.DrawTile( icon, w, h, 0, 0, icon.MaterialUSize(), icon.MaterialVSize() );
-}
-
-simulated function DrawWalls( Canvas C, Pawn p )
-{
-	// local vector x, y, z, hitLocation, hitNormal, pos;
-	// local float w;
-
-	// w = 32;
-	// GetAxes( rotator(vect(1, 0, 0)), x, y, z );
-	// if( p.Trace( hitLocation, hitNormal, y*RadarRange ) == Level ){
-	// 	pos = GetMapPosFor( hitLocation );
-	// 	C.SetPos( (RX + RW*0.5 + pos.x), (RY + RH*0.5 + pos.y - w*0.5) );
-	// 	C.DrawColor = class'HUD'.default.WhiteColor;
-	// 	C.DrawLine( 1, w );
-	// 	C.DrawText( "y" );
-	// }
-
-	// if( p.Trace( hitLocation, hitNormal, x*RadarRange ) == Level ){
-	// 	pos = GetMapPosFor( hitLocation );
-	// 	C.SetPos( (RX + RW*0.5 + pos.x - w*0.5), (RY + RH*0.5 + pos.y) );
-	// 	C.DrawColor = class'HUD'.default.WhiteColor;
-	// 	C.DrawLine( 1, w );
-	// 	C.DrawText( "x" );
-	// }
-
-	// if( p.Trace( hitLocation, hitNormal, -(y*RadarRange) ) == Level ){
-	// 	pos = GetMapPosFor( hitLocation );
-	// 	C.SetPos( (RX + RW*0.5 + pos.x - w*0.5), (RY + RH*0.5 + pos.y) );
-	// 	C.DrawColor = class'HUD'.default.WhiteColor;
-	// 	C.DrawLine( 3, w );
-	// 	C.DrawText( "-y" );
-	// }
-
-	// if( p.Trace( hitLocation, hitNormal, -(x*RadarRange) ) == Level ){
-	// 	pos = GetMapPosFor( hitLocation );
-	// 	C.SetPos( (RX + RW*0.5 + pos.x), (RY + RH*0.5 + pos.y - w*0.5) );
-	// 	C.DrawColor = class'HUD'.default.WhiteColor;
-	// 	C.DrawLine( 1, w );
-	// 	C.DrawText( "-x" );
-	// }
 }
 
 defaultproperties
@@ -386,6 +356,7 @@ defaultproperties
 
     MapRange=8000
     MapNorth=(Y=1.0)
+    MapTextureColor=(B=160,G=160,R=160,A=255)
 
     begin object name=oMapRender class=ScriptedTexture
     	UClampMode=TC_Clamp
@@ -395,8 +366,13 @@ defaultproperties
     end object
     MapRenderTexture=oMapRender
 
+    begin object name=oMapRenderFinalBlend class=FinalBlend
+        FrameBufferBlending=FB_AlphaBlend
+        Material=oMapRender
+    end object
+
     begin object name=oPostMapRender class=TexRotator
-    	Material=oMapRender
+    	Material=oMapRenderFinalBlend
     	UOffset=512
     	VOffset=512
     end object
@@ -405,12 +381,12 @@ defaultproperties
     begin object name=oMapShader class=Shader
     	Diffuse=oPostMapRender
     	Opacity=Texture'RadarMask'
-    	OutputBlending=OB_Masked
+    	OutputBlending=OB_Normal
     end object
     RadarMap=oMapShader
 
     begin object name=oRadarBorder class=TexRotator
-    	Material=RadarBorder
+    	Material=Texture'RadarBorder'
     	UOffset=128
     	VOffset=128
     end object
@@ -422,8 +398,10 @@ defaultproperties
     	VOffset=32
     end object
     PlayerArrow=oPlayerArrow
+    
     PlayerMarker=Texture'RadarDot'
+    // CurrentPlayerMarker=FinalBlend'ONSInterface-TX.CurrentPlayerIconFinal'
     FiendMarker=Texture'RadarFiend'
-
-    // MapTexture=Texture'ONS-Torlan.BackgroundImage'
+    TaskMarker=Texture'AS_FX_TX.Icons.Icons.OBJ_Proximity_Tex'
+    TaskOptionalMarker=Texture'AS_FX_TX.Icons.Icons.OBJ_Proximity_Tex'
 }

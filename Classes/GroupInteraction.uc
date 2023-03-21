@@ -196,7 +196,7 @@ function PostRender( Canvas C )
 
 	hud = ViewportOwner.Actor.myHUD;
 	gamehud = HUD_Assault(hud);
-	if( myGroup != none )
+	if( gamehud != none && myGroup != none )
 	{
 		foreach target.Region.Zone.ZoneActors( class'GroupTriggerVolume', volume )
 		{
@@ -274,7 +274,7 @@ function PostRender( Canvas C )
 
 	if( Radar != none )
 	{
-		Radar.Render( C, ViewportOwner.Actor );
+		Radar.Render(C);
 	}
 }
 

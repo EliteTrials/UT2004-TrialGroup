@@ -140,7 +140,7 @@ function Trigger( Actor Other, Pawn instigator )
 
 defaultproperties
 {
-	lzCompleteMessage="%name% (%n/%c tasks completed!)"
+	lzCompleteMessage="%name% (%n/%c)"
 	TaskName="Escape The Caves"
 	TaskMessage=""
 	bOptionalTask=false
