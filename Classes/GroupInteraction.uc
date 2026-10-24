@@ -17,6 +17,8 @@ var protected GroupHud gHud;
 
 var float LastWaizeTime;
 
+var const Color TaskColor, TaskOptionalColor;
+
 event Initialized()
 {
 	super.Initialized();
@@ -175,6 +177,7 @@ function PostRender( Canvas C )
 	local byte bIsInSight;
 	local GroupTriggerVolume volume;
 	local GroupInstance myGroup;
+    local GroupTaskComplete task;
 
 	if( ViewportOwner.Actor.myHUD.bShowScoreBoard || ViewportOwner.Actor.myHUD.bHideHUD || ViewportOwner.Actor.PlayerReplicationInfo == None )
 		return;
@@ -218,6 +221,23 @@ function PostRender( Canvas C )
 			}
 		}
 	}
+
+	// foreach target.DynamicActors( class'GroupTaskComplete', task )
+	// {
+    //     if( !IsTargetInView( C, target, task.Location, ViewportOwner.Actor.TeamBeaconMaxDist, bIsInSight, dist ) )
+    //     {
+    //         continue;
+    //     }
+
+    //     av = C.WorldToScreen( task.Location );
+    //     if (task.bOptionalTask) {
+    //         C.DrawColor = TaskOptionalColor;
+    //     } else C.DrawColor = TaskColor;
+
+    //     s = task.TaskName;
+
+    //     class'HUD_AssaultExt'.static.Draw_2DCollisionBox( C, task, av, s, task.DrawScale*0.5, true );
+    // }
 
 	foreach target.DynamicActors( class'GroupInstance', group )
 	{
@@ -319,4 +339,7 @@ defaultproperties
 {
 	bVisible=true
 	bRequiresTick=true
+
+    TaskColor=(B=200,G=40,R=40,A=120)
+    TaskOptionalColor=(B=40,G=200,R=200,A=120)
 }

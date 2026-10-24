@@ -1,0 +1,7 @@
+ghost
+set pawn location (x=0,y=0,z=2048)
+set playercontroller rotation (pitch=0,yaw=2508,roll=0)
+set playercontroller rendmap 5
+set playercontroller showflags
+togglescreenshotmode
+screenshot
