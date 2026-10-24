@@ -117,6 +117,9 @@ If you wish for your map to have solo records, you must make sure that you have 
 
 - GTR-MastersOfDodge
 
+- GTR-Escape (Dylan)
+  > [![Watch the video](https://img.youtube.com/vi/t8upxFg6kSQ/maxresdefault.jpg)](https://youtu.be/t8upxFg6kSQ)
+
 ## Unreleased maps
 
 - GTR-FractalMap (Billa, Unreleased 2015)
